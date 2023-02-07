@@ -94,14 +94,29 @@ class Client():
 
         else:
             print(f'Login status: \033[0;31m{result["status"]}\033[0m')
+
+
+    def logout(self):
+
+        packet = {
+            "command": "logout"
+            }   
+
+        result = self.send(packet)
+        
+        if str(result["status"]) == 'True':
+            print(f'Logout status: \033[0;32m{result["status"]}\033[0m')
+
+        else:
+            print(f'Logout status: \033[0;31m{result["status"]}\033[0m')
+
     
 
 def main():
     api = Client('DEMO')
     api.connect()
     api.login()
-
-
+    api.logout()
     api.disconnect()
 
 if __name__ == "__main__":
