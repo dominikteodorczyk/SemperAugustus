@@ -1,0 +1,19 @@
+
+#XTB DEMO accound passes
+XTB_LOGIN_DEMO = " "
+XTB_PASSWORD_DEMO = " "
+XTB_HOST_DEMO = 'xapi.xtb.com'
+XTB_MAIN_PORT_DEMO = 5124
+XTB_STREAMING_PORT_DEMO = 5125
+XTB_WEBSOCET_DEMO = 'wss://ws.xtb.com/demo'
+XTB_WEBSOCET_STRAMING_PORT_DEMO = 'wss://ws.xtb.com/demo'
+
+
+#XTB REAL accound passes
+XTB_LOGIN_REAL = " "
+XTB_PASSWORD_REAL = " "
+XTB_HOST_REAL = 'xapi.xtb.com'
+XTB_MAIN_PORT_REAL = 5112
+XTB_STREAMING_PORT_REAL = 5113
+XTB_WEBSOCET_REAL = 'wss://ws.xtb.com/real'
+XTB_WEBSOCET_STRAMING_PORT_REAL = 'wss://ws.xtb.com/realStream'
