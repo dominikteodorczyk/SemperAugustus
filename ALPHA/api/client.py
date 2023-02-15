@@ -1,8 +1,10 @@
 import requests as rq
 import os, json
-from websocket import create_connection
+from websocket import create_connection, WebSocketException
 from settings import *
 import logging
+import csv
+import pandas as pd
 
 
 
@@ -22,24 +24,31 @@ class Client():
         self.websocket_conection = None
         self.login_status = None
         self.stream_sesion_id = None
+        self.connection = None
 
     def connect(self):
         try:
             self.websocket_conection = create_connection(self.user.websocet)
             logging.info(f'Connected successfully to {self.user.websocet}')
             print(f'Connected successfully to {self.user.websocet}')
-        except:
-            logging.error(f'Not connected to {self.user.websocet}')
-            print(f'Not connected to {self.user.websocet}')
+            self.connection = True
+        except WebSocketException as e:
+            logging.error(f'Not connected to {self.user.websocet}, {e}')
+            print(f'Not connected to {self.user.websocet}, {e}')
+            exit(0)
+
 
     def disconnect(self):
         try:
             self.websocket_conection.close()
             logging.info(f'Disconnected successfully from {self.user.websocet}\n')
             print(f'Disconnected successfully from {self.user.websocet}\n')
+            self.connection = False
         except:
             logging.error(f'Not disconnected from {self.user.websocet}\n')
             print(f'Not disconnected from {self.user.websocet}\n')
+            self.connection = True
+
 
     def send(self, packet:dict):
         try:
@@ -47,7 +56,8 @@ class Client():
             answer = self.websocket_conection.recv()
             return json.loads(answer) 
         except:
-            pass
+            logging.warning('No request has been sent')
+
 
     def login(self):
         packet = {
@@ -58,7 +68,10 @@ class Client():
                 } 
             }
         
-        result = self.send(packet)
+        try:
+            result = self.send(packet)
+        except:
+            logging.warning()
 
         if str(result["status"]) == 'True':
             print(f'Login status: {result["status"]}, stream session id: {result["streamSessionId"]}')
@@ -68,6 +81,7 @@ class Client():
         else:
             print(f'Login status: {result["status"]}')
             logging.error(f'Not logged')
+
 
     def logout(self):
         packet = {
@@ -82,10 +96,63 @@ class Client():
             logging.error(f'Not logged out')
 
 
+class RetrievingTradingData():
+
+    def __init__(self) -> None:
+        pass
+
+
+    def getallsymbols(self):
+        packet = {
+	        "command": "getAllSymbols"
+        }
+        return packet
+
+    def getcalendar(self):
+        packet = {
+	    "command": "getCalendar"
+        }
+        return packet
+    
+
+    def getcalendar(self):
+        packet = {
+	    "command": "getCalendar"
+        }
+        return packet
+    
+
+    def getcalendar(self):
+        packet = {
+	    "command": "getCalendar"
+        }
+        return packet
+
+    
+    def getcalendar(self):
+        packet = {
+	    "command": "getCalendar"
+        }
+        return packet
+    
+
+
+
+
+
 def main():
     api = Client('DEMO')
+    rtd = RetrievingTradingData()
     api.connect()
     api.login()
+    # symbols = api.send(rtd.getcalendar())
+    # data_to_csv = symbols['returnData']
+
+    # data = pd.DataFrame()
+    # for i in data_to_csv:
+    #     data = data.append(i, ignore_index = True)
+
+    # data.to_csv('data.csv', sep='\t')
     api.logout()
     api.disconnect()
 
