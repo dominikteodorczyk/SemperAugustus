@@ -102,6 +102,11 @@ class RetrievingTradingData():
         pass
 
 
+    def command_rtd(func): #wraper do wysyłki komend rtd 
+        def wrapped(**kwargs):
+            return func(**kwargs)
+
+
     def getallsymbols(self):
         packet = {
 	        "command": "getAllSymbols"
@@ -115,10 +120,11 @@ class RetrievingTradingData():
         return packet
     
 
-    def getcalendar(self):
+    def getchartlastrequest(self, parameters:dict):
         packet = {
-	    "command": "getCalendar"
-        }
+            "command": "getChartLastRequest",
+            "arguments": parameters
+            }
         return packet
     
 
