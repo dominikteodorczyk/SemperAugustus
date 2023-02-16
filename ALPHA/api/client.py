@@ -102,6 +102,11 @@ class RetrievingTradingData():
         pass
 
 
+    def command_rtd(func): #wraper do wysyłki komend rtd 
+        def wrapped(**kwargs):
+            return func(**kwargs)
+
+
     def getallsymbols(self):
         packet = {
 	        "command": "getAllSymbols"
