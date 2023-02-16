@@ -115,10 +115,11 @@ class RetrievingTradingData():
         return packet
     
 
-    def getcalendar(self):
+    def getchartlastrequest(self, parameters:dict):
         packet = {
-	    "command": "getCalendar"
-        }
+            "command": "getChartLastRequest",
+            "arguments": parameters
+            }
         return packet
     
 
