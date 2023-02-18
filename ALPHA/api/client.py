@@ -100,7 +100,7 @@ class Client():
     def opensession(self):
         #TODO: Napisać funkcje wykonująca sesje
 
-        for i in range(1,7):
+        for i in range(6):
             try:
                 self.connect()
                 break
@@ -119,11 +119,33 @@ class Client():
         self.disconnect()
 
 
+    def reconnect(self):
+        if self.connection == False or None:
+            print('Wait..')
+            for i in range(1,10):
+                try:
+                    logging.info('Trying to reconnect')
+                    self.connect()
+                    self.login()
+                    logging.info('Reconnected')
+                    break
+                except:
+                    logging.info('No way to restore the connection. Trying again')
+                    sleep(1)
+            if self.connection == None:
+                print(f'Session interrupted, unable to connect.')
+                logging.warning(f'Session interrupted, unable to connect.')
+                exit(0) 
+        else:
+            pass
+
+
+
 
 def main():
     api = Client('DEMO')
     api.opensession()
-
+    api.reconnect()
     api.closesession()
 
 if __name__ == "__main__":
