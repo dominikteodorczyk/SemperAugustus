@@ -1,10 +1,9 @@
-import requests as rq
 import os, json
 from websocket import create_connection, WebSocketException
 from settings import *
 import logging
-import csv
-import pandas as pd
+from commands import RetrievingTradingData
+from time import sleep
 
 
 
@@ -14,6 +13,7 @@ class Client():
 
         logging.basicConfig(filename='ALPHA\logging\client.log',level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
         logging.info(f'{mode} SESSION OPENED')
+        logging
 
         self.client_main_dir = os.path.dirname(os.path.abspath(__file__))
         if mode == 'REAL':
@@ -36,6 +36,7 @@ class Client():
             logging.error(f'Not connected to {self.user.websocet}, {e}')
             print(f'Not connected to {self.user.websocet}, {e}')
             exit(0)
+            self.connection = False
 
 
     def disconnect(self):
@@ -95,72 +96,35 @@ class Client():
             print(f'Not logged out')
             logging.error(f'Not logged out')
 
-
-class RetrievingTradingData():
-
-    def __init__(self) -> None:
-        pass
-
-
-    def command_rtd(func): #wraper do wysyłki komend rtd 
-        def wrapped(**kwargs):
-            return func(**kwargs)
-
-
-    def getallsymbols(self):
-        packet = {
-	        "command": "getAllSymbols"
-        }
-        return packet
-
-    def getcalendar(self):
-        packet = {
-	    "command": "getCalendar"
-        }
-        return packet
     
+    def opensession(self):
+        #TODO: Napisać funkcje wykonująca sesje
 
-    def getchartlastrequest(self, parameters:dict):
-        packet = {
-            "command": "getChartLastRequest",
-            "arguments": parameters
-            }
-        return packet
-    
+        for i in range(1,7):
+            try:
+                self.connect()
+                break
+            except:
+                print('Wait...')
+                sleep(10)
+        if self.connection == None:
+            print(f'Session interrupted, unable to connect.')
+            logging.warning(f'Session interrupted, unable to connect.')
+            exit(0) 
 
-    def getcalendar(self):
-        packet = {
-	    "command": "getCalendar"
-        }
-        return packet
+        self.login()
 
-    
-    def getcalendar(self):
-        packet = {
-	    "command": "getCalendar"
-        }
-        return packet
-    
-
-
+    def closesession(self):
+        self.logout()
+        self.disconnect()
 
 
 
 def main():
     api = Client('DEMO')
-    rtd = RetrievingTradingData()
-    api.connect()
-    api.login()
-    # symbols = api.send(rtd.getcalendar())
-    # data_to_csv = symbols['returnData']
+    api.opensession()
 
-    # data = pd.DataFrame()
-    # for i in data_to_csv:
-    #     data = data.append(i, ignore_index = True)
-
-    # data.to_csv('data.csv', sep='\t')
-    api.logout()
-    api.disconnect()
+    api.closesession()
 
 if __name__ == "__main__":
     main()
