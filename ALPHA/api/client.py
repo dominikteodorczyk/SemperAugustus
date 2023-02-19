@@ -35,8 +35,9 @@ class Client():
         except WebSocketException as e:
             logging.error(f'Not connected to {self.user.websocet}, {e}')
             print(f'Not connected to {self.user.websocet}, {e}')
-            exit(0)
             self.connection = False
+            exit(0)
+            
 
 
     def disconnect(self):
@@ -98,7 +99,6 @@ class Client():
 
     
     def opensession(self):
-        #TODO: Napisać funkcje wykonująca sesje
 
         for i in range(6):
             try:
@@ -107,10 +107,12 @@ class Client():
             except:
                 print('Wait...')
                 sleep(10)
-        if self.connection == None:
+        if self.connection == False or None:
             print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
             exit(0) 
+        
+
 
         self.login()
 
