@@ -347,5 +347,5 @@ class RetrievingTradingData():
 
 class StreamingCommands():
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, streamSessionId) -> None:
+        self.streamSessionId = streamSessionId
