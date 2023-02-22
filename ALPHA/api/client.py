@@ -11,7 +11,7 @@ class Client():
 
     def __init__(self, mode: str) -> None:
 
-        logging.basicConfig(filename='ALPHA\logging\client.log',level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+        logging.basicConfig(filename='ALPHA\log\client.log',level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
         logging.info(f'{mode} SESSION OPENED')
         logging
 
