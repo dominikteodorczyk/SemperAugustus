@@ -129,4 +129,6 @@ dmypy.json
 .pyre/
 *.txt
 
+#user choice
+ALPHA/docs/
 *.ipynb
