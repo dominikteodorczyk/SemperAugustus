@@ -142,6 +142,9 @@ class Client():
             pass
 
 
+    def DataStream():
+        #wraper dla danych streamowanych
+        pass
 
 
 def main():
