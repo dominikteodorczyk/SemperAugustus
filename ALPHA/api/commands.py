@@ -357,3 +357,8 @@ class StreamingCommands():
             "streamSessionId": self.streamSessionId,
             "symbol": 'ticket'
         }
+
+        getCandles = {
+            "command": "getProfits",
+            "streamSessionId": self.streamSessionId
+        }
