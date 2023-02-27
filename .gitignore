@@ -130,5 +130,6 @@ dmypy.json
 *.txt
 
 #user choice
-ALPHA/docs/
+ALPHA/docs/*.docx
+ALPHA/docs/*.pdf 
 *.ipynb
