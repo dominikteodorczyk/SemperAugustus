@@ -349,3 +349,16 @@ class StreamingCommands():
 
     def __init__(self, streamSessionId) -> None:
         self.streamSessionId = streamSessionId
+
+    def subscribe(self):
+
+        getCandles = {
+            "command": "getCandles",
+            "streamSessionId": self.streamSessionId,
+            "symbol": 'ticket'
+        }
+
+        getCandles = {
+            "command": "getProfits",
+            "streamSessionId": self.streamSessionId
+        }
