@@ -26,3 +26,10 @@ class UserREAL():
         self.streaming_port = getenv('XTB_STREAMING_PORT_REAL')
         self.websocet = getenv('XTB_WEBSOCET_REAL')
         self.websocet_streaming_port = getenv('XTB_WEBSOCET_STRAMING_PORT_REAL')
+
+
+class Tickets():
+
+    def __init__(self) -> None:
+        load_dotenv()
+        self.Tickets = getenv('TICKETS_TO_TRADE')
