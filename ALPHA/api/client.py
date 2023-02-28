@@ -4,6 +4,9 @@ from settings import *
 import logging
 from commands import RetrievingTradingData
 from time import sleep
+from stream import WalletStream
+from threading import Thread
+import time
 
 
 
@@ -26,6 +29,11 @@ class Client():
         self.stream_sesion_id = None
         self.connection = None
 
+        self.websocket_stream_conection = None
+        self.connection_stream = None
+
+
+
     def connect(self):
         try:
             self.websocket_conection = create_connection(self.user.websocet)
@@ -38,7 +46,17 @@ class Client():
             self.connection = False
             exit(0)
             
-
+    def connect_stream(self):
+        try:
+            self.websocket_stream_conection = create_connection(self.user.websocet_streaming_port)
+            logging.info(f'Connected successfully to {self.user.websocet_streaming_port}')
+            print(f'Connected successfully to {self.user.websocet_streaming_port}')
+            self.connection_stream = True
+        except WebSocketException as e:
+            logging.error(f'Not connected to {self.user.websocet_streaming_port}, {e}')
+            print(f'Not connected to {self.user.websocet_streaming_port}, {e}')
+            self.connection_stream = False
+            exit(0)
 
     def disconnect(self):
         try:
@@ -51,14 +69,30 @@ class Client():
             print(f'Not disconnected from {self.user.websocet}\n')
             self.connection = True
 
+    def disconnect_stream(self):
+        try:
+            self.websocket_stream_conection.close()
+            logging.info(f'Disconnected successfully from {self.user.websocet_streaming_port}')
+            print(f'Disconnected successfully from {self.user.websocet_streaming_port}')
+            self.connection_stream = False
+        except:
+            logging.error(f'Not disconnected from {self.user.websocet_streaming_port}')
+            print(f'Not disconnected from {self.user.websocet_streaming_port}')
+            self.connection_stream = True
 
-    def send(self, packet:dict):
+
+    def send_n_return(self, packet:dict):
         try:
             self.websocket_conection.send(json.dumps(packet))
             answer = self.websocket_conection.recv()
             return json.loads(answer) 
         except:
             logging.warning('No request has been sent')
+
+    def stream_send(self, message:dict):
+
+        self.websocket_stream_conection.send(json.dumps(message))
+
 
 
     def login(self):
@@ -71,7 +105,7 @@ class Client():
             }
         
         try:
-            result = self.send(packet)
+            result = self.send_n_return(packet)
         except:
             logging.warning()
 
@@ -89,7 +123,7 @@ class Client():
         packet = {
             "command": "logout"
             }   
-        result = self.send(packet)
+        result = self.send_n_return(packet)
         if str(result["status"]) == 'True':
             print(f'Logout status: {result["status"]}')
             logging.info(f'Logged out of {self.user.login}')
@@ -103,6 +137,7 @@ class Client():
         for i in range(6):
             try:
                 self.connect()
+                self.connect_stream()
                 break
             except:
                 print('Wait...')
@@ -111,13 +146,11 @@ class Client():
             print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
             exit(0) 
-        
-
-
         self.login()
 
     def closesession(self):
         self.logout()
+        self.disconnect_stream()
         self.disconnect()
 
 
@@ -128,6 +161,7 @@ class Client():
                 try:
                     logging.info('Trying to reconnect')
                     self.connect()
+                    self.connect_stream()
                     self.login()
                     logging.info('Reconnected')
                     break
@@ -142,16 +176,20 @@ class Client():
             pass
 
 
-    def DataStream():
-        #wraper dla danych streamowanych
-        pass
+
 
 
 def main():
     api = Client('DEMO')
     api.opensession()
-    api.reconnect()
+
+    WalletStream(api=api).stream()
+
+
     api.closesession()
+
+
+
 
 if __name__ == "__main__":
     main()
