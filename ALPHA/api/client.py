@@ -4,6 +4,9 @@ from settings import *
 import logging
 from commands import RetrievingTradingData
 from time import sleep
+from stream import WalletStream
+from threading import Thread
+import time
 
 
 
@@ -52,7 +55,7 @@ class Client():
             self.connection = True
 
 
-    def send(self, packet:dict):
+    def send_n_return(self, packet:dict):
         try:
             self.websocket_conection.send(json.dumps(packet))
             answer = self.websocket_conection.recv()
@@ -71,7 +74,7 @@ class Client():
             }
         
         try:
-            result = self.send(packet)
+            result = self.send_n_return(packet)
         except:
             logging.warning()
 
@@ -89,7 +92,7 @@ class Client():
         packet = {
             "command": "logout"
             }   
-        result = self.send(packet)
+        result = self.send_n_return(packet)
         if str(result["status"]) == 'True':
             print(f'Logout status: {result["status"]}')
             logging.info(f'Logged out of {self.user.login}')
@@ -142,16 +145,23 @@ class Client():
             pass
 
 
-    def DataStream():
-        #wraper dla danych streamowanych
+    def openslot(self, ticker):
         pass
 
 
 def main():
     api = Client('DEMO')
     api.opensession()
-    api.reconnect()
+
+    # wallet = WalletStream(api=api)
+    # wallet.stream()
+
+    # time.sleep(30)
+
     api.closesession()
+
+
+
 
 if __name__ == "__main__":
     main()
