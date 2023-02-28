@@ -69,6 +69,17 @@ class Client():
             print(f'Not disconnected from {self.user.websocet}\n')
             self.connection = True
 
+    def disconnect_stream(self):
+        try:
+            self.websocket_stream_conection.close()
+            logging.info(f'Disconnected successfully from {self.user.websocet_streaming_port}')
+            print(f'Disconnected successfully from {self.user.websocet_streaming_port}')
+            self.connection_stream = False
+        except:
+            logging.error(f'Not disconnected from {self.user.websocet_streaming_port}')
+            print(f'Not disconnected from {self.user.websocet_streaming_port}')
+            self.connection_stream = True
+
 
     def send_n_return(self, packet:dict):
         try:
@@ -135,13 +146,11 @@ class Client():
             print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
             exit(0) 
-        
-
-
         self.login()
 
     def closesession(self):
         self.logout()
+        self.disconnect_stream()
         self.disconnect()
 
 
@@ -152,6 +161,7 @@ class Client():
                 try:
                     logging.info('Trying to reconnect')
                     self.connect()
+                    self.connect_stream()
                     self.login()
                     logging.info('Reconnected')
                     break
@@ -173,10 +183,8 @@ def main():
     api = Client('DEMO')
     api.opensession()
 
-    wallet = WalletStream(api=api)
-    wallet.stream()
+    WalletStream(api=api).stream()
 
-    # time.sleep(30)
 
     api.closesession()
 
