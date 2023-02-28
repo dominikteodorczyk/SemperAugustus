@@ -29,6 +29,11 @@ class Client():
         self.stream_sesion_id = None
         self.connection = None
 
+        self.websocket_stream_conection = None
+        self.connection_stream = None
+
+
+
     def connect(self):
         try:
             self.websocket_conection = create_connection(self.user.websocet)
@@ -41,7 +46,17 @@ class Client():
             self.connection = False
             exit(0)
             
-
+    def connect_stream(self):
+        try:
+            self.websocket_stream_conection = create_connection(self.user.websocet_streaming_port)
+            logging.info(f'Connected successfully to {self.user.websocet_streaming_port}')
+            print(f'Connected successfully to {self.user.websocet_streaming_port}')
+            self.connection_stream = True
+        except WebSocketException as e:
+            logging.error(f'Not connected to {self.user.websocet_streaming_port}, {e}')
+            print(f'Not connected to {self.user.websocet_streaming_port}, {e}')
+            self.connection_stream = False
+            exit(0)
 
     def disconnect(self):
         try:
@@ -62,6 +77,11 @@ class Client():
             return json.loads(answer) 
         except:
             logging.warning('No request has been sent')
+
+    def stream_send(self, message:dict):
+
+        self.websocket_stream_conection.send(json.dumps(message))
+
 
 
     def login(self):
@@ -106,6 +126,7 @@ class Client():
         for i in range(6):
             try:
                 self.connect()
+                self.connect_stream()
                 break
             except:
                 print('Wait...')
@@ -145,16 +166,15 @@ class Client():
             pass
 
 
-    def openslot(self, ticker):
-        pass
+
 
 
 def main():
     api = Client('DEMO')
     api.opensession()
 
-    # wallet = WalletStream(api=api)
-    # wallet.stream()
+    wallet = WalletStream(api=api)
+    wallet.stream()
 
     # time.sleep(30)
 
