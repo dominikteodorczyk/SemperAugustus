@@ -9,7 +9,6 @@ class WalletStream():
         self.api = api
         self.balance = None
 
-
     def keepalive(self):
         return self.api.stream_send({"command": "getKeepAlive", "streamSessionId": self.api.stream_sesion_id})
 
@@ -17,14 +16,13 @@ class WalletStream():
         return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})
 
     def streamread(self):
-        message = json.loads(self.api.websocket_stream_conection.recv())
+        message = json.loads(self.api.socket_stream_conection.recv())
         try:
             if message['command'] == 'balance':
                 self.balance = np.fromiter(message['data'].values(), dtype=float)
                 print(self.balance)
         except:
             pass
-
 
     def stream(self):
         self.subscribe()
