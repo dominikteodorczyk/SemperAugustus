@@ -7,7 +7,7 @@ from time import sleep
 from stream import WalletStream
 from threading import Thread
 import socket
-from ssl import SSLContext
+from ssl import wrap_socket
 
 
 
@@ -24,10 +24,10 @@ class Client():
             self.user = UserDEMO()
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_conection = SSLContext().wrap_socket(sock)
+        self.socket_conection = wrap_socket(sock)
 
         sock_stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_stream_conection = SSLContext().wrap_socket(sock_stream)
+        self.socket_stream_conection = wrap_socket(sock_stream)
 
         self.login_status = None
         self.stream_sesion_id = None
@@ -137,19 +137,20 @@ class Client():
     
     def opensession(self):
 
-        for i in range(6):
-            try:
-                self.connect()
-                self.connect_stream()
-                break
-            except:
-                print('Wait...')
-                sleep(1)
-        if self.connection == False or None:
+        try:
+            for i in range(6):
+                try:
+                    self.connect()
+                    self.connect_stream()
+                    break
+                except:
+                    print('Wait...')
+                    sleep(10)
+            self.login()
+        except:
             print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
             exit(0) 
-        self.login()
 
     def closesession(self):
         self.logout()
@@ -170,7 +171,7 @@ class Client():
                     break
                 except:
                     logging.info('No way to restore the connection. Trying again')
-                    sleep(1)
+                    sleep(5)
             if self.connection == None:
                 print(f'Session interrupted, unable to connect.')
                 logging.warning(f'Session interrupted, unable to connect.')
