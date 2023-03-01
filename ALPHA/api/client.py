@@ -1,5 +1,4 @@
 import os, json
-from websocket import create_connection, WebSocketException
 from settings import *
 import logging
 from commands import RetrievingTradingData
@@ -7,7 +6,7 @@ from time import sleep
 from stream import WalletStream
 from threading import Thread
 import socket
-from ssl import wrap_socket
+import ssl
 
 
 
@@ -24,10 +23,10 @@ class Client():
             self.user = UserDEMO()
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_conection = wrap_socket(sock)
+        self.socket_conection = ssl.wrap_socket(sock, ssl_version = ssl.PROTOCOL_TLS)
 
         sock_stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_stream_conection = wrap_socket(sock_stream)
+        self.socket_stream_conection = ssl.wrap_socket(sock_stream, ssl_version = ssl.PROTOCOL_TLS)
 
         self.login_status = None
         self.stream_sesion_id = None
@@ -40,7 +39,7 @@ class Client():
             logging.info(f'Connected successfully to {self.user.host}')
             print(f'Connected successfully to {self.user.host}')
             self.connection = True
-        except WebSocketException as e:
+        except Exception as e:
             logging.error(f'Not connected to {self.user.host}, {e}')
             print(f'Not connected to {self.user.host}, {e}')
             self.connection = False
@@ -52,7 +51,7 @@ class Client():
             logging.info(f'Connected successfully stream to {self.user.host}')
             print(f'Connected successfully stream to {self.user.host}')
             self.connection_stream = True
-        except WebSocketException as e:
+        except Exception as e:
             logging.error(f'Not connected stream to {self.user.host}, {e}')
             print(f'Not connected stream to {self.user.host}, {e}')
             self.connection_stream = False
@@ -75,7 +74,7 @@ class Client():
             logging.info(f'Disconnected successfully stream from {self.user.host}')
             print(f'Disconnected successfully stream from {self.user.host}')
             self.connection_stream = False
-        except:
+        except Exception as e:
             logging.error(f'Not disconnected stream from {self.user.host}')
             print(f'Not disconnected stream from {self.user.host}')
             self.connection_stream = True
@@ -86,8 +85,8 @@ class Client():
             self.socket_conection.send(json.dumps(packet).encode('utf-8'))
             answer = self.socket_conection.recv()
             return json.loads(answer) 
-        except:
-            logging.warning('No request has been sent')
+        except Exception as e:
+            logging.warning(f'No request has been sent, {e}')
 
     def stream_send(self, message:dict):
         return self.socket_stream_conection.send(json.dumps(message).encode('utf-8'))
@@ -177,7 +176,7 @@ class Client():
 
 def main():
     api = Client('DEMO')
-    api.reconnect()
+    api.opensession()
     api.closesession()
 
 
