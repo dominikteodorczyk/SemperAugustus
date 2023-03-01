@@ -34,8 +34,6 @@ class Client():
         self.connection = None
         self.connection_stream = None
 
-
-
     def connect(self):
         try:
             self.socket_conection.connect((self.user.host, self.user.main_port))
@@ -91,12 +89,8 @@ class Client():
         except:
             logging.warning('No request has been sent')
 
-
     def stream_send(self, message:dict):
-
-        self.socket_stream_conection.send(json.dumps(message).encode('utf-8'))
-
-
+        return self.socket_stream_conection.send(json.dumps(message).encode('utf-8'))
 
     def login(self):
         packet = {
@@ -121,7 +115,6 @@ class Client():
             print(f'Login status: {result["status"]}')
             logging.error(f'Not logged')
 
-
     def logout(self):
         packet = {
             "command": "logout"
@@ -133,7 +126,6 @@ class Client():
         else:
             print(f'Not logged out')
             logging.error(f'Not logged out')
-
     
     def opensession(self):
 
@@ -157,19 +149,21 @@ class Client():
         self.disconnect_stream()
         self.disconnect()
 
-
     def reconnect(self):
-        if self.connection == False or None:
+        if self.connection != True:
             print('Wait..')
             for i in range(1,10):
                 try:
+                    print(f'Trying to reconnect')
                     logging.info('Trying to reconnect')
                     self.connect()
                     self.connect_stream()
                     self.login()
+                    print(f'Reconnected')
                     logging.info('Reconnected')
                     break
                 except:
+                    print(f'No way to restore the connection. Trying again')
                     logging.info('No way to restore the connection. Trying again')
                     sleep(5)
             if self.connection == None:
@@ -183,7 +177,7 @@ class Client():
 
 def main():
     api = Client('DEMO')
-    api.opensession()
+    api.reconnect()
     api.closesession()
 
 
