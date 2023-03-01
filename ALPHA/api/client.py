@@ -6,7 +6,8 @@ from commands import RetrievingTradingData
 from time import sleep
 from stream import WalletStream
 from threading import Thread
-import time
+import socket
+from ssl import SSLContext
 
 
 
@@ -16,82 +17,84 @@ class Client():
 
         logging.basicConfig(filename='ALPHA\log\client.log',level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
         logging.info(f'{mode} SESSION OPENED')
-        logging
 
-        self.client_main_dir = os.path.dirname(os.path.abspath(__file__))
         if mode == 'REAL':
             self.user = UserREAL()
         if mode == 'DEMO':
             self.user = UserDEMO()
 
-        self.websocket_conection = None
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket_conection = SSLContext().wrap_socket(sock)
+
+        sock_stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket_stream_conection = SSLContext().wrap_socket(sock_stream)
+
         self.login_status = None
         self.stream_sesion_id = None
         self.connection = None
-
-        self.websocket_stream_conection = None
         self.connection_stream = None
 
 
 
     def connect(self):
         try:
-            self.websocket_conection = create_connection(self.user.websocet)
-            logging.info(f'Connected successfully to {self.user.websocet}')
-            print(f'Connected successfully to {self.user.websocet}')
+            self.socket_conection.connect((self.user.host, self.user.main_port))
+            logging.info(f'Connected successfully to {self.user.host}')
+            print(f'Connected successfully to {self.user.host}')
             self.connection = True
         except WebSocketException as e:
-            logging.error(f'Not connected to {self.user.websocet}, {e}')
-            print(f'Not connected to {self.user.websocet}, {e}')
+            logging.error(f'Not connected to {self.user.host}, {e}')
+            print(f'Not connected to {self.user.host}, {e}')
             self.connection = False
             exit(0)
             
     def connect_stream(self):
         try:
-            self.websocket_stream_conection = create_connection(self.user.websocet_streaming_port)
-            logging.info(f'Connected successfully to {self.user.websocet_streaming_port}')
-            print(f'Connected successfully to {self.user.websocet_streaming_port}')
+            self.socket_stream_conection.connect((self.user.host, self.user.streaming_port))
+            logging.info(f'Connected successfully stream to {self.user.host}')
+            print(f'Connected successfully stream to {self.user.host}')
             self.connection_stream = True
         except WebSocketException as e:
-            logging.error(f'Not connected to {self.user.websocet_streaming_port}, {e}')
-            print(f'Not connected to {self.user.websocet_streaming_port}, {e}')
+            logging.error(f'Not connected stream to {self.user.host}, {e}')
+            print(f'Not connected stream to {self.user.host}, {e}')
             self.connection_stream = False
             exit(0)
 
     def disconnect(self):
         try:
-            self.websocket_conection.close()
-            logging.info(f'Disconnected successfully from {self.user.websocet}\n')
-            print(f'Disconnected successfully from {self.user.websocet}\n')
+            self.socket_conection.close()
+            logging.info(f'Disconnected successfully from {self.user.host}\n')
+            print(f'Disconnected successfully from {self.user.host}\n')
             self.connection = False
         except:
-            logging.error(f'Not disconnected from {self.user.websocet}\n')
-            print(f'Not disconnected from {self.user.websocet}\n')
+            logging.error(f'Not disconnected from {self.user.host}\n')
+            print(f'Not disconnected from {self.user.host}\n')
             self.connection = True
 
     def disconnect_stream(self):
         try:
-            self.websocket_stream_conection.close()
-            logging.info(f'Disconnected successfully from {self.user.websocet_streaming_port}')
-            print(f'Disconnected successfully from {self.user.websocet_streaming_port}')
+            self.socket_stream_conection.close()
+            logging.info(f'Disconnected successfully stream from {self.user.host}')
+            print(f'Disconnected successfully stream from {self.user.host}')
             self.connection_stream = False
         except:
-            logging.error(f'Not disconnected from {self.user.websocet_streaming_port}')
-            print(f'Not disconnected from {self.user.websocet_streaming_port}')
+            logging.error(f'Not disconnected stream from {self.user.host}')
+            print(f'Not disconnected stream from {self.user.host}')
             self.connection_stream = True
 
 
     def send_n_return(self, packet:dict):
         try:
-            self.websocket_conection.send(json.dumps(packet))
-            answer = self.websocket_conection.recv()
+            self.socket_conection.send(json.dumps(packet).encode('utf-8'))
+            answer = self.socket_conection.recv()
             return json.loads(answer) 
         except:
             logging.warning('No request has been sent')
 
+
     def stream_send(self, message:dict):
 
-        self.websocket_stream_conection.send(json.dumps(message))
+        self.socket_stream_conection.send(json.dumps(message).encode('utf-8'))
 
 
 
@@ -141,7 +144,7 @@ class Client():
                 break
             except:
                 print('Wait...')
-                sleep(10)
+                sleep(1)
         if self.connection == False or None:
             print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
@@ -177,18 +180,10 @@ class Client():
 
 
 
-
-
 def main():
     api = Client('DEMO')
     api.opensession()
-
-    WalletStream(api=api).stream()
-
-
     api.closesession()
-
-
 
 
 if __name__ == "__main__":
