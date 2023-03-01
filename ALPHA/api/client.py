@@ -1,12 +1,12 @@
 import os, json
-from websocket import create_connection, WebSocketException
 from settings import *
 import logging
 from commands import RetrievingTradingData
 from time import sleep
 from stream import WalletStream
 from threading import Thread
-import time
+import socket
+import ssl
 
 
 
@@ -16,84 +16,80 @@ class Client():
 
         logging.basicConfig(filename='ALPHA\log\client.log',level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
         logging.info(f'{mode} SESSION OPENED')
-        logging
 
-        self.client_main_dir = os.path.dirname(os.path.abspath(__file__))
         if mode == 'REAL':
             self.user = UserREAL()
         if mode == 'DEMO':
             self.user = UserDEMO()
 
-        self.websocket_conection = None
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket_conection = ssl.wrap_socket(sock, ssl_version = ssl.PROTOCOL_TLS)
+
+        sock_stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket_stream_conection = ssl.wrap_socket(sock_stream, ssl_version = ssl.PROTOCOL_TLS)
+
         self.login_status = None
         self.stream_sesion_id = None
         self.connection = None
-
-        self.websocket_stream_conection = None
         self.connection_stream = None
-
-
 
     def connect(self):
         try:
-            self.websocket_conection = create_connection(self.user.websocet)
-            logging.info(f'Connected successfully to {self.user.websocet}')
-            print(f'Connected successfully to {self.user.websocet}')
+            self.socket_conection.connect((self.user.host, self.user.main_port))
+            logging.info(f'Connected successfully to {self.user.host}')
+            print(f'Connected successfully to {self.user.host}')
             self.connection = True
-        except WebSocketException as e:
-            logging.error(f'Not connected to {self.user.websocet}, {e}')
-            print(f'Not connected to {self.user.websocet}, {e}')
+        except Exception as e:
+            logging.error(f'Not connected to {self.user.host}, {e}')
+            print(f'Not connected to {self.user.host}, {e}')
             self.connection = False
             exit(0)
             
     def connect_stream(self):
         try:
-            self.websocket_stream_conection = create_connection(self.user.websocet_streaming_port)
-            logging.info(f'Connected successfully to {self.user.websocet_streaming_port}')
-            print(f'Connected successfully to {self.user.websocet_streaming_port}')
+            self.socket_stream_conection.connect((self.user.host, self.user.streaming_port))
+            logging.info(f'Connected successfully stream to {self.user.host}')
+            print(f'Connected successfully stream to {self.user.host}')
             self.connection_stream = True
-        except WebSocketException as e:
-            logging.error(f'Not connected to {self.user.websocet_streaming_port}, {e}')
-            print(f'Not connected to {self.user.websocet_streaming_port}, {e}')
+        except Exception as e:
+            logging.error(f'Not connected stream to {self.user.host}, {e}')
+            print(f'Not connected stream to {self.user.host}, {e}')
             self.connection_stream = False
             exit(0)
 
     def disconnect(self):
         try:
-            self.websocket_conection.close()
-            logging.info(f'Disconnected successfully from {self.user.websocet}\n')
-            print(f'Disconnected successfully from {self.user.websocet}\n')
+            self.socket_conection.close()
+            logging.info(f'Disconnected successfully from {self.user.host}\n')
+            print(f'Disconnected successfully from {self.user.host}\n')
             self.connection = False
         except:
-            logging.error(f'Not disconnected from {self.user.websocet}\n')
-            print(f'Not disconnected from {self.user.websocet}\n')
+            logging.error(f'Not disconnected from {self.user.host}\n')
+            print(f'Not disconnected from {self.user.host}\n')
             self.connection = True
 
     def disconnect_stream(self):
         try:
-            self.websocket_stream_conection.close()
-            logging.info(f'Disconnected successfully from {self.user.websocet_streaming_port}')
-            print(f'Disconnected successfully from {self.user.websocet_streaming_port}')
+            self.socket_stream_conection.close()
+            logging.info(f'Disconnected successfully stream from {self.user.host}')
+            print(f'Disconnected successfully stream from {self.user.host}')
             self.connection_stream = False
-        except:
-            logging.error(f'Not disconnected from {self.user.websocet_streaming_port}')
-            print(f'Not disconnected from {self.user.websocet_streaming_port}')
+        except Exception as e:
+            logging.error(f'Not disconnected stream from {self.user.host}')
+            print(f'Not disconnected stream from {self.user.host}')
             self.connection_stream = True
 
 
     def send_n_return(self, packet:dict):
         try:
-            self.websocket_conection.send(json.dumps(packet))
-            answer = self.websocket_conection.recv()
+            self.socket_conection.send(json.dumps(packet).encode('utf-8'))
+            answer = self.socket_conection.recv()
             return json.loads(answer) 
-        except:
-            logging.warning('No request has been sent')
+        except Exception as e:
+            logging.warning(f'No request has been sent, {e}')
 
     def stream_send(self, message:dict):
-
-        self.websocket_stream_conection.send(json.dumps(message))
-
-
+        return self.socket_stream_conection.send(json.dumps(message).encode('utf-8'))
 
     def login(self):
         packet = {
@@ -118,7 +114,6 @@ class Client():
             print(f'Login status: {result["status"]}')
             logging.error(f'Not logged')
 
-
     def logout(self):
         packet = {
             "command": "logout"
@@ -130,44 +125,46 @@ class Client():
         else:
             print(f'Not logged out')
             logging.error(f'Not logged out')
-
     
     def opensession(self):
 
-        for i in range(6):
-            try:
-                self.connect()
-                self.connect_stream()
-                break
-            except:
-                print('Wait...')
-                sleep(10)
-        if self.connection == False or None:
+        try:
+            for i in range(6):
+                try:
+                    self.connect()
+                    self.connect_stream()
+                    break
+                except:
+                    print('Wait...')
+                    sleep(10)
+            self.login()
+        except:
             print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
             exit(0) 
-        self.login()
 
     def closesession(self):
         self.logout()
         self.disconnect_stream()
         self.disconnect()
 
-
     def reconnect(self):
-        if self.connection == False or None:
+        if self.connection != True:
             print('Wait..')
             for i in range(1,10):
                 try:
+                    print(f'Trying to reconnect')
                     logging.info('Trying to reconnect')
                     self.connect()
                     self.connect_stream()
                     self.login()
+                    print(f'Reconnected')
                     logging.info('Reconnected')
                     break
                 except:
+                    print(f'No way to restore the connection. Trying again')
                     logging.info('No way to restore the connection. Trying again')
-                    sleep(1)
+                    sleep(5)
             if self.connection == None:
                 print(f'Session interrupted, unable to connect.')
                 logging.warning(f'Session interrupted, unable to connect.')
@@ -177,18 +174,10 @@ class Client():
 
 
 
-
-
 def main():
     api = Client('DEMO')
     api.opensession()
-
-    WalletStream(api=api).stream()
-
-
     api.closesession()
-
-
 
 
 if __name__ == "__main__":
