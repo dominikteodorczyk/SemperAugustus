@@ -40,14 +40,23 @@ class Test_Client():
         assert APIobject.socket_conection.getpeername()[1] == peer_port
         assert APIobject.connection is connection
 
-    def test_Client_method_connect_is_making_stream_connection(self):
+    def test_Client_method_disconnect_is_making_disconnection(self):
         # A test to see if there is a valid stream connection to the appropriate main port and if there are 
         # changes to the stream connection confirmation attribute
         APIobject = Client('DEMO')
 
-        APIobject.connect_stream()
-        connection = True
-        peer_port = UserDEMO().streaming_port
+        APIobject.connect()
+        APIobject.disconnect()
+        connection = APIobject.connection
         
-        assert APIobject.socket_stream_conection.getpeername()[1] == peer_port
-        assert APIobject.connection_stream is connection
+        try:
+            APIobject.login()
+            failed = False
+        except:
+            failed = True
+
+        assert connection is False
+        assert failed is True
+
+
+        
