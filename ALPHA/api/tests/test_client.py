@@ -1,9 +1,9 @@
 """
-Check the numpy config is valid.
+Check the client of XTB API is valid.
 """
 
 import pytest
-from client import *
+from client import Client
 from settings import UserDEMO
 import ssl
 
@@ -40,15 +40,15 @@ class Test_Client():
         assert APIobject.socket_conection.getpeername()[1] == peer_port
         assert APIobject.connection is connection
 
+
     def test_Client_method_disconnect_is_making_disconnection(self):
         # A test to see if there is a valid stream connection to the appropriate main port and if there are 
         # changes to the stream connection confirmation attribute
         APIobject = Client('DEMO')
-
         APIobject.connect()
+
         APIobject.disconnect()
         connection = APIobject.connection
-        
         try:
             APIobject.login()
             failed = False
@@ -56,7 +56,23 @@ class Test_Client():
             failed = True
 
         assert connection is False
-        assert failed is True
+        assert failed is True # means that the login attempt should fail after disconnection
 
 
-        
+    def test_Client_method_logs(self):
+        # test of the logging function along with checking the change of parameters of the client class object
+        APIobject = Client('DEMO')
+        APIobject.connect()
+
+        # reading parameters before logging
+        status_before_loging = APIobject.login_status
+        streamId_before_login = APIobject.stream_sesion_id
+
+        APIobject.login()
+
+        # statuses should be different before and after
+        assert status_before_loging != APIobject.login_status
+        assert streamId_before_login != APIobject.stream_sesion_id
+
+        # login status read from server response should be True
+        assert APIobject.login_status is True
