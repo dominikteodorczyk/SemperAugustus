@@ -1,5 +1,5 @@
 import pytest
-from ALPHA.api.client import *
+from client import *
 
 def test_atributes():
     pass
