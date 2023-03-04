@@ -3,7 +3,7 @@ Check the Client of XTB API is valid.
 """
 
 import pytest
-from client import Client
+from client import *
 from settings import UserDEMO
 import ssl
 
@@ -121,3 +121,33 @@ class Test_Client():
 
         assert status_after_logout != status_after_login #statuses should be different
         assert recv_status_after_logout != recv_status #statuses should be different
+
+
+class Test_Decorators():
+    # A class of validation tests for decorators to test streaming processes
+
+    def test_Decorator_session_simulator(self):
+        # decorator test to simulate the session
+
+        # creating a decorated session_simulation function that sends a command
+        # to specify the API version
+        @session_simulator
+        def simple_function(api, command):
+            recv = api.send_n_return(command)
+            print(recv)
+            recv_status = recv['status']
+            return recv_status, api
+        
+        # command definition 
+        simple_command = {
+            "command": "getVersion"
+        }
+
+        #function_returns is a tulpe of result and used api object
+        function_returns, args, kwargs = simple_function(command = simple_command)
+        
+        assert function_returns[0] is True # return status message sent by the server, should be true
+        assert type(function_returns[1]) is Client # api should be an object of class client (passed to function from wrapper
+        assert args is () # for 'command = simple_command' the args command is empty
+        assert kwargs['command'] == simple_command # used inside the decorator comenda should be consistent with the declared 
+
