@@ -122,9 +122,11 @@ class Client():
         if str(result["status"]) == 'True':
             print(f'Logout status: {result["status"]}')
             logging.info(f'Logged out of {self.user.login}')
+            self.login_status = False
         else:
             print(f'Not logged out')
             logging.error(f'Not logged out')
+            self.login_status = True
     
     def opensession(self):
 

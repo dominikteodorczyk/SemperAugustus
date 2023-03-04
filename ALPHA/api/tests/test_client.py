@@ -1,5 +1,5 @@
 """
-Check the client of XTB API is valid.
+Check the Client of XTB API is valid.
 """
 
 import pytest
@@ -60,7 +60,7 @@ class Test_Client():
 
 
     def test_Client_method_logs(self):
-        # test of the logging function along with checking the change of parameters of the client class object
+        # test of the logging method along with checking the change of parameters of the client class object
         APIobject = Client('DEMO')
         APIobject.connect()
 
@@ -69,6 +69,15 @@ class Test_Client():
         streamId_before_login = APIobject.stream_sesion_id
 
         APIobject.login()
+        simple_command = {
+            "command": "getVersion"
+        }
+
+        try:
+            recv = APIobject.send_n_return(simple_command)
+            recv_status = recv['status'] 
+        except:
+            recv_status == False
 
         # statuses should be different before and after
         assert status_before_loging != APIobject.login_status
@@ -76,3 +85,39 @@ class Test_Client():
 
         # login status read from server response should be True
         assert APIobject.login_status is True
+
+        # The server's response to the version query is a dictionary with the API version 
+        # and status which should be True
+        assert recv_status is True
+
+
+    def test_Client_method_logout_logs_out(self):
+        # test of the loggout method along with checking the change of parameters of the client class object
+        APIobject = Client('DEMO')
+        APIobject.connect()
+
+        # logging and reading the status value returned from the server
+        APIobject.login()
+        simple_command = {
+            "command": "getVersion"
+        }
+
+        try:
+            recv = APIobject.send_n_return(simple_command)
+            recv_status = recv['status'] 
+        except:
+            recv_status == False
+        # reading the value of object parameters after logging in
+        status_after_login = APIobject.login_status
+
+        # logout, query dispatch test and reading the value of the login status parameter
+        APIobject.logout()
+        try:
+            recv = APIobject.send_n_return(simple_command)
+            recv_status_after_logout = recv['status'] 
+        except:
+            recv_status_after_logout = False
+        status_after_logout = APIobject.login_status
+
+        assert status_after_logout != status_after_login #statuses should be different
+        assert recv_status_after_logout != recv_status #statuses should be different
