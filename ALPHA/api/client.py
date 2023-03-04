@@ -1,10 +1,7 @@
-import os, json
+import json
 from settings import *
 import logging
-from commands import RetrievingTradingData
 from time import sleep
-from stream import WalletStream
-from threading import Thread
 import socket
 import ssl
 
@@ -173,6 +170,19 @@ class Client():
                 exit(0) 
         else:
             pass
+
+def session_simulator(func):
+    # A decorator that allows simulated sessions to include a single process as part of testing
+    api = Client(mode='DEMO')
+
+    def wrapper(*args, **kwargs):
+        api.opensession()
+        result = func(api, *args, **kwargs)
+        api.closesession()
+        return result, args, kwargs 
+    
+    wrapper.attrib = api
+    return wrapper
 
 
 
