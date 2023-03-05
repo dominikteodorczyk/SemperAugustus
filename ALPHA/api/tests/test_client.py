@@ -6,6 +6,8 @@ import pytest
 from client import *
 from settings import UserDEMO
 import ssl
+import numpy as np
+from time import monotonic_ns
 
 
 class Test_Client():
@@ -150,4 +152,51 @@ class Test_Decorators():
         assert type(function_returns[1]) is Client # api should be an object of class client (passed to function from wrapper
         assert args is () # for 'command = simple_command' the args command is empty
         assert kwargs['command'] == simple_command # used inside the decorator comenda should be consistent with the declared 
+
+
+    def test_Decorator_stream_session_simulator(self):
+        # decorator test to simulate the session
+
+        # creating a decorated session_simulation function that sends a command
+        # to specify the API version
+
+        # defining the execution time of the data stream
+        time_run = 10
+        
+        # definition of a class that creates and reads a stream of data on a portfolio
+        @stream_session_simulator(time_run)
+        class SimpleTestStream():
+
+            def __init__(self, api):
+                self.api = api
+                self.balance = None
+
+            def subscribe(self):
+                return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})
+            
+            def streamread(self):
+                message = json.loads(self.api.socket_stream_conection.recv())
+                try:
+                    if message['command'] == 'balance':
+                        self.balance = np.fromiter(message['data'].values(), dtype=float)
+                except:
+                    pass
+
+            def stream(self):
+                self.subscribe()
+                while self.api.connection_stream == True:
+                    self.streamread()
+
+        # measurement of the start of the stream object creation and termination            
+        start_runing = monotonic_ns()
+        returned = SimpleTestStream()
+        time_of_runing_code = monotonic_ns() - start_runing
+
+        # reading the data passed from the stream session simulator decorator
+        balance = returned[0]['balance'] # portfolio data 
+        api = returned[0]['api'] # api class
+
+        assert np.shape(balance) == (10,) # portfolio data should be of numpy matrix dimension 10x
+        assert type(api) == Client # the api used should be of the Client class
+        assert time_of_runing_code >= time_run # stream execution time should be longer than declared in the decorator
 
