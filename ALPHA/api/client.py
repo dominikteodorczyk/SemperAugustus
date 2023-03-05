@@ -1,13 +1,12 @@
-import os, json
+import json
 from settings import *
 import logging
-from commands import RetrievingTradingData
 from time import sleep
-from stream import WalletStream
-from threading import Thread
 import socket
 import ssl
-
+from threading import Thread
+import numpy as np
+from typing import Callable
 
 
 class Client():
@@ -122,9 +121,11 @@ class Client():
         if str(result["status"]) == 'True':
             print(f'Logout status: {result["status"]}')
             logging.info(f'Logged out of {self.user.login}')
+            self.login_status = False
         else:
             print(f'Not logged out')
             logging.error(f'Not logged out')
+            self.login_status = True
     
     def opensession(self):
 
@@ -172,13 +173,44 @@ class Client():
         else:
             pass
 
+def session_simulator(func):
+    # A decorator that allows simulated sessions to include a single process as part of testing
+    api = Client(mode='DEMO')
+
+    def wrapper(*args, **kwargs):
+        api.opensession()
+        result = func(api, *args, **kwargs)
+        api.closesession()
+        return result, args, kwargs 
+    
+    wrapper.attrib = api
+    return wrapper
+
+
+def stream_session_simulator(time):
+    def decorator(func):
+        # A decorator that allows simulated stream sessions to include a single stream process as part of testing
+        api = Client(mode='DEMO')
+
+        def wrapper(*args, **kwargs):
+            api.opensession()
+            object = func(api, *args, **kwargs)
+            Thread(target = object.stream, args=(), daemon=True).start()
+            sleep(time)
+            result = object.__dict__
+            api.closesession()
+            return result, args, kwargs
+        
+        wrapper.attrib = api
+        return wrapper
+    return decorator
+
 
 
 def main():
     api = Client('DEMO')
     api.opensession()
     api.closesession()
-
 
 if __name__ == "__main__":
     main()
