@@ -4,7 +4,9 @@ import logging
 from time import sleep
 import socket
 import ssl
-
+from threading import Thread
+import numpy as np
+from typing import Callable
 
 
 class Client():
@@ -185,12 +187,30 @@ def session_simulator(func):
     return wrapper
 
 
+def stream_session_simulator(time):
+    def decorator(func):
+        # A decorator that allows simulated stream sessions to include a single stream process as part of testing
+        api = Client(mode='DEMO')
+
+        def wrapper(*args, **kwargs):
+            api.opensession()
+            object = func(api, *args, **kwargs)
+            Thread(target = object.stream, args=(), daemon=True).start()
+            sleep(time)
+            result = object.__dict__
+            api.closesession()
+            return result, args, kwargs
+        
+        wrapper.attrib = api
+        return wrapper
+    return decorator
+
+
 
 def main():
     api = Client('DEMO')
     api.opensession()
     api.closesession()
-
 
 if __name__ == "__main__":
     main()
