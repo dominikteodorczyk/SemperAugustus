@@ -12,6 +12,7 @@ from time import monotonic_ns
 
 class Test_Client():
 
+
     def test_Class_demo_atributes(self):
         # collective test of the set of attributes of the created object connecting to the api of the client class 
         APIobject = Client('DEMO')
@@ -128,7 +129,14 @@ class Test_Client():
 class Test_Decorators():
     # A class of validation tests for decorators to test streaming processes
 
-    def test_Decorator_session_simulator(self):
+    @pytest.fixture
+    def simple_command():
+        command = {
+            "command": "getVersion"
+        }
+        return command
+
+    def test_Decorator_session_simulator(simple_command):
         # decorator test to simulate the session
 
         # creating a decorated session_simulation function that sends a command
@@ -140,13 +148,9 @@ class Test_Decorators():
             recv_status = recv['status']
             return recv_status, api
         
-        # command definition 
-        simple_command = {
-            "command": "getVersion"
-        }
-
+        
         #function_returns is a tulpe of result and used api object
-        function_returns, args, kwargs = simple_function(command = simple_command)
+        function_returns, args, kwargs = simple_function(simple_command)
         
         assert function_returns[0] is True # return status message sent by the server, should be true
         assert type(function_returns[1]) is Client # api should be an object of class client (passed to function from wrapper
