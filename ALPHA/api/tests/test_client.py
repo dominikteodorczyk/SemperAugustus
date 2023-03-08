@@ -129,14 +129,12 @@ class Test_Client():
 class Test_Decorators():
     # A class of validation tests for decorators to test streaming processes
 
-    @pytest.fixture
-    def simple_command():
-        command = {
-            "command": "getVersion"
-        }
-        return command
+    @pytest.fixture()
+    def simple_command(self):
+        return {"command": "getVersion"}
 
-    def test_Decorator_session_simulator(simple_command):
+
+    def test_Decorator_session_simulator(self, simple_command):
         # decorator test to simulate the session
 
         # creating a decorated session_simulation function that sends a command
@@ -150,8 +148,9 @@ class Test_Decorators():
         
         
         #function_returns is a tulpe of result and used api object
-        function_returns, args, kwargs = simple_function(simple_command)
-        
+        function_returns, args, kwargs = simple_function(command = simple_command)
+        print(function_returns, args, kwargs)
+
         assert function_returns[0] is True # return status message sent by the server, should be true
         assert type(function_returns[1]) is Client # api should be an object of class client (passed to function from wrapper
         assert args is () # for 'command = simple_command' the args command is empty
@@ -203,4 +202,3 @@ class Test_Decorators():
         assert np.shape(balance) == (10,) # portfolio data should be of numpy matrix dimension 10x
         assert type(api) == Client # the api used should be of the Client class
         assert time_of_runing_code >= time_run # stream execution time should be longer than declared in the decorator
-
