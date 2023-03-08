@@ -129,7 +129,7 @@ class Test_Client():
 class Test_Decorators():
     # A class of validation tests for decorators to test streaming processes
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture()
     def simple_command(self):
         return {"command": "getVersion"}
 
