@@ -6,6 +6,7 @@ import pytest
 from client import *
 from streamtools import *
 
+
 class Test_WalletStream():
 
     @pytest.fixture
