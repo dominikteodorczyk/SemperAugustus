@@ -9,7 +9,6 @@ from streamtools import *
 
 class Test_WalletStream():
       
-
     # stream duration definition
     @pytest.fixture
     def event_duration(self):
@@ -24,15 +23,18 @@ class Test_WalletStream():
         # returns[1] = args, 
         # returns[2] = kwargs
         return stream_session_simulator(event_duration)(WalletStream)
-    
 
 
-
-
-        
     def test_walletstream_is_having_api(self, event):
         results = event()
         assert type(results[0]['api']) is Client # api should be an object of class Client (passed to function from wrapper) 
 
+    @pytest.mark.xfail(reason='API sometimes failed to send data during stream')
+    def test_walletstream_is_returns_a_numpy_array(self, event):
+        results = event()
+        assert type(results[0]['balance']) is np.ndarray # object should store numpy array in attribute
 
-
+    @pytest.mark.xfail(reason='API sometimes failed to send data during stream',xfail_strict =True)
+    def test_walletstream_is_returns_a_ten_parameters_in_array(self, event):
+        results = event()
+        assert np.shape(results[0]['balance'])[0] is 10 # API will send a portfolio balance consisting of 10 parameters
