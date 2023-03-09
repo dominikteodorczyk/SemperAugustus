@@ -10,7 +10,7 @@ class Stream():
 
 class WalletStream():
 
-    def __init__(self, api:object) -> None:
+    def __init__(self, api=None) -> None:
         self.api = api
         self.balance = None
 
