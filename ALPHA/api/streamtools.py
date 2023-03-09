@@ -10,7 +10,7 @@ class Stream():
 
 class WalletStream():
 
-    def __init__(self, api:object) -> None:
+    def __init__(self, api=None) -> None:
         self.api = api
         self.balance = None
 
@@ -37,15 +37,15 @@ class WalletStream():
 
 class AssetBOX():
 
-    def __init__(self, api:object, symbol:str) -> None:
+    def __init__(self, api=None, symbol=None) -> None:
         self.api = api
-        self.symbol:str
+        self.symbol = symbol
         self.open_stream_data_M1 = None
         self.open_stream_data_M5 = None
-        self.cendle_1M = None
-        self.cendle_5M = None
-        self.cendle_15M = None
-        self.cendle_1M = None
+        self.candle_1M = None
+        self.candle_5M = None
+        self.candle_15M = None
+        self.candle_1H = None
         self.price = None
 
     def keepalive(self):
@@ -54,3 +54,5 @@ class AssetBOX():
     def subscribe(self):
         return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})      
 
+    def stream():
+        pass

@@ -179,7 +179,7 @@ def session_simulator(func):
 
     def wrapper(*args, **kwargs):
         api.opensession()
-        result = func(api, *args, **kwargs)
+        result = func(api = api, *args, **kwargs)
         api.closesession()
         return result, args, kwargs 
     
@@ -194,7 +194,7 @@ def stream_session_simulator(time):
 
         def wrapper(*args, **kwargs):
             api.opensession()
-            object = func(api, *args, **kwargs)
+            object = func(api = api, *args, **kwargs)
             Thread(target = object.stream, args=(), daemon=True).start()
             sleep(time)
             result = object.__dict__
