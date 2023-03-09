@@ -67,7 +67,6 @@ class Test_AssetBOX():
                                          'candle_15M','candle_1H','price'])
     def test_AssetBOX_have_attribut(self,event_symbol,atribut):
         # A test to see if a class object, when initialized, has a set of defined attributes
-        ###if hasattr(AssetBOX(symbol=event_symbol), atribut): have_atribut = True
         assert hasattr(AssetBOX(symbol=event_symbol), atribut) is True
 
     def test_AssetBOX_have_Client_as_api_after_init(self, event_symbol):
@@ -93,3 +92,21 @@ class Test_AssetBOX():
         api.opensession()
         assert AssetBOX(api = api, symbol=event_symbol).__getattribute__(atribut) == expected # should be the same
         api.closesession()
+
+
+    @pytest.mark.parametrize('atribut, expected', [('open_stream_data_M1', True),
+                                                    ('open_stream_data_M5',True),('candle_1M',True),('candle_5M',True),('candle_15M',True),
+                                                    ('candle_1H',True),('price',True)])
+    def test_AssetBOX_get_values_after_stream(self, event, atribut, expected):
+        exist = None
+        if event[0][atribut]: exist = True
+        assert exist is expected
+
+
+    @pytest.mark.parametrize('atribut, expected', [('open_stream_data_M1', True),
+                                                    ('open_stream_data_M5',True),('candle_1M',True),('candle_5M',True),('candle_15M',True),
+                                                    ('candle_1H',True),('price',True)])
+    def test_AssetBOX_get_values_after_stream(self, event, atribut, expected):
+        exist = None
+        if event[0][atribut]: exist = True
+        assert exist is expected
