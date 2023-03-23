@@ -7,13 +7,16 @@ import ssl
 from threading import Thread
 import numpy as np
 from typing import Callable
+from streamtools import AssetBOX, WalletStream
+import sys
+
 
 
 class Client():
 
     def __init__(self, mode: str) -> None:
-
-        logging.basicConfig(filename='ALPHA\log\client.log',level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+        #filename='ALPHA\log\client.log',
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
         logging.info(f'{mode} SESSION OPENED')
 
         if mode == 'REAL':
@@ -36,23 +39,23 @@ class Client():
         try:
             self.socket_conection.connect((self.user.host, self.user.main_port))
             logging.info(f'Connected successfully to {self.user.host}')
-            print(f'Connected successfully to {self.user.host}')
+            #print(f'Connected successfully to {self.user.host}')
             self.connection = True
         except Exception as e:
             logging.error(f'Not connected to {self.user.host}, {e}')
-            print(f'Not connected to {self.user.host}, {e}')
+            #print(f'Not connected to {self.user.host}, {e}')
             self.connection = False
-            exit(0)
+            sys.exit(0)
             
     def connect_stream(self):
         try:
             self.socket_stream_conection.connect((self.user.host, self.user.streaming_port))
             logging.info(f'Connected successfully stream to {self.user.host}')
-            print(f'Connected successfully stream to {self.user.host}')
+            #print(f'Connected successfully stream to {self.user.host}')
             self.connection_stream = True
         except Exception as e:
             logging.error(f'Not connected stream to {self.user.host}, {e}')
-            print(f'Not connected stream to {self.user.host}, {e}')
+            #print(f'Not connected stream to {self.user.host}, {e}')
             self.connection_stream = False
             exit(0)
 
@@ -60,22 +63,22 @@ class Client():
         try:
             self.socket_conection.close()
             logging.info(f'Disconnected successfully from {self.user.host}\n')
-            print(f'Disconnected successfully from {self.user.host}\n')
+            #print(f'Disconnected successfully from {self.user.host}\n')
             self.connection = False
         except:
             logging.error(f'Not disconnected from {self.user.host}\n')
-            print(f'Not disconnected from {self.user.host}\n')
+            #print(f'Not disconnected from {self.user.host}\n')
             self.connection = True
 
     def disconnect_stream(self):
         try:
             self.socket_stream_conection.close()
             logging.info(f'Disconnected successfully stream from {self.user.host}')
-            print(f'Disconnected successfully stream from {self.user.host}')
+            #print(f'Disconnected successfully stream from {self.user.host}')
             self.connection_stream = False
         except Exception as e:
             logging.error(f'Not disconnected stream from {self.user.host}')
-            print(f'Not disconnected stream from {self.user.host}')
+            #print(f'Not disconnected stream from {self.user.host}')
             self.connection_stream = True
 
 
@@ -105,12 +108,12 @@ class Client():
             logging.warning()
 
         if str(result["status"]) == 'True':
-            print(f'Login status: {result["status"]}, stream session id: {result["streamSessionId"]}')
+            #print(f'Login status: {result["status"]}, stream session id: {result["streamSessionId"]}')
             self.login_status = result["status"]
             self.stream_sesion_id = result["streamSessionId"]
             logging.info(f'Logged as {self.user.login} (stream session id: {result["streamSessionId"]})')
         else:
-            print(f'Login status: {result["status"]}')
+            #print(f'Login status: {result["status"]}')
             logging.error(f'Not logged')
 
     def logout(self):
@@ -119,11 +122,11 @@ class Client():
             }   
         result = self.send_n_return(packet)
         if str(result["status"]) == 'True':
-            print(f'Logout status: {result["status"]}')
+            #print(f'Logout status: {result["status"]}')
             logging.info(f'Logged out of {self.user.login}')
             self.login_status = False
         else:
-            print(f'Not logged out')
+            #print(f'Not logged out')
             logging.error(f'Not logged out')
             self.login_status = True
     
@@ -140,7 +143,7 @@ class Client():
                     sleep(10)
             self.login()
         except:
-            print(f'Session interrupted, unable to connect.')
+            #print(f'Session interrupted, unable to connect.')
             logging.warning(f'Session interrupted, unable to connect.')
             exit(0) 
 
@@ -151,25 +154,25 @@ class Client():
 
     def reconnect(self):
         if self.connection != True:
-            print('Wait..')
+            #print('Wait..')
             for i in range(1,10):
                 try:
-                    print(f'Trying to reconnect')
+                    #print(f'Trying to reconnect')
                     logging.info('Trying to reconnect')
                     self.connect()
                     self.connect_stream()
                     self.login()
-                    print(f'Reconnected')
+                    #print(f'Reconnected')
                     logging.info('Reconnected')
                     break
                 except:
-                    print(f'No way to restore the connection. Trying again')
+                    #print(f'No way to restore the connection. Trying again')
                     logging.info('No way to restore the connection. Trying again')
                     sleep(5)
             if self.connection == None:
-                print(f'Session interrupted, unable to connect.')
+                #print(f'Session interrupted, unable to connect.')
                 logging.warning(f'Session interrupted, unable to connect.')
-                exit(0) 
+                sys.exit(0) 
         else:
             pass
 
@@ -210,6 +213,7 @@ def stream_session_simulator(time):
 def main():
     api = Client('DEMO')
     api.opensession()
+    AssetBOX(api=api,symbol='EURUSD').stream()
     api.closesession()
 
 if __name__ == "__main__":

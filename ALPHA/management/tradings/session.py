@@ -1,3 +1,0 @@
-'''
-tools guiding individual items
-'''
