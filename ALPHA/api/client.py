@@ -7,6 +7,7 @@ import ssl
 from threading import Thread
 import numpy as np
 from typing import Callable
+from streamtools import AssetBOX, WalletStream
 
 
 class Client():
@@ -210,6 +211,7 @@ def stream_session_simulator(time):
 def main():
     api = Client('DEMO')
     api.opensession()
+    AssetBOX(api=api,symbol='EURUSD').stream()
     api.closesession()
 
 if __name__ == "__main__":
