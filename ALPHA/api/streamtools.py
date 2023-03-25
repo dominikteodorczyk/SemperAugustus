@@ -35,7 +35,7 @@ class WalletStream():
             self.keepalive()
 
 
-class AssetBOX():
+class AssetObservator():
 
     def __init__(self, api=None, symbol=None) -> None:
         self.api = api
@@ -97,6 +97,4 @@ class AssetBOX():
         while self.api.connection_stream == True:
             self.streamread()
             self.make_more_candles()
-
-
 
