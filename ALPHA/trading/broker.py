@@ -1,6 +1,6 @@
-from ALPHA.api.client import Client
-from ALPHA.api.streamtools import WalletStream, AssetObservator
-from ALPHA.api.commands import *
+from api.client import Client
+from api.streamtools import WalletStream, AssetObservator
+from api.commands import buy_transaction, sell_transaction
 
 class TradingSlot():
 
@@ -43,6 +43,19 @@ class TradingSession():
     def session():
         pass
 
-    
+
+
+
+
+def main():
+    api = Client('DEMO')
+    api.open_session()
+    #response = buy_transaction(api=api,symbol='BINANCECOIN',volume=0.3)
+    data = sell_transaction(api=api,symbol='BINANCECOIN',volume=0.3)
+    print(data)
+    api.close_session()
+
+if __name__ == "__main__":
+    main()
 
     
