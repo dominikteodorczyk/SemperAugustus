@@ -1,4 +1,6 @@
-import functools
+import logging
+import json
+from ast import literal_eval
 
 
 class RetrievingTradingData():
@@ -329,36 +331,105 @@ class RetrievingTradingData():
         return packet
     
     def tradeTransactionStatus(self, parameters:dict):
-        '''
-        {
-            "command": "tradeTransactionStatus",
-            "arguments": {
-                "order": 43
-            }
-        }
-        http://developers.xstore.pro/documentation/#tradeTransactionStatus
-        '''
+
         packet = {
             "command": "tradeTransactionStatus",
             "arguments": parameters
         }
         return packet
-    
 
-class StreamingCommands():
 
-    def __init__(self, streamSessionId) -> None:
-        self.streamSessionId = streamSessionId
+def get_trade_info(response:dict, order_no:int):
+    transactions_data = None
+    for i in response['returnData']:
+        if i['order2'] == order_no:
+            transactions_data = {
+                'symbol': i['symbol'],
+                'order': order_no,
+                'position': i['position'],
+                'cmd': i['cmd'],
+                'volume': i['volume'],
+                'open_price': i['open_price'],
+                'open_time': i['open_time']
+            }
+            break
+    return transactions_data
 
-    def subscribe(self):
 
-        getCandles = {
-            "command": "getCandles",
-            "streamSessionId": self.streamSessionId,
-            "symbol": 'ticket'
+def get_trades(api, order_no=None):
+    response = api.send_n_return( {
+        "command": "getTrades",
+        "arguments": {
+            "openedOnly": True
         }
+    })
+    transactions_data = get_trade_info(response, order_no)
+    return transactions_data
 
-        getCandles = {
-            "command": "getProfits",
-            "streamSessionId": self.streamSessionId
-        }
+
+def buy_transaction(api:object, symbol:str, volume:float):
+    buy_arguments = {
+                    "tradeTransInfo": {
+                        "cmd": 0,
+                        "customComment": "",
+                        "expiration": 0,
+                        "order": 0,
+                        "price": 1.4,
+                        "sl": 0,
+                        "tp": 0,
+                        "symbol": symbol,
+                        "type": 0,
+                        "volume": volume
+                        }
+                    }
+          
+    buy_response = api.send_n_return({
+        "command": "tradeTransaction", 
+        "arguments": buy_arguments
+         })
+
+    if buy_response['status'] is True:
+        order_no = buy_response["returnData"]["order"]
+        position = {
+            'order_no': order_no, 
+            'transactions_data': get_trades(api = api, order_no = order_no)
+            }
+        logging.info(f'[{symbol} BUY] transaction opened (order no: {order_no})')
+        return position
+    else:
+        logging.info(f'[{symbol} BUY] Transaction failed')
+
+
+def sell_transaction(api:object, symbol:str, volume:float):
+    sell_arguments = {
+                    "tradeTransInfo": {
+                        "cmd": 1,
+                        "customComment": "",
+                        "expiration": 0,
+                        "order": 0,
+                        "price": 1.4,
+                        "sl": 0,
+                        "tp": 0,
+                        "symbol": symbol,
+                        "type": 0,
+                        "volume": volume
+                        }
+                    }
+          
+    sell_response = api.send_n_return({
+        "command": "tradeTransaction", 
+        "arguments": sell_arguments
+         })
+
+    if sell_response['status'] is True:
+        order_no = sell_response["returnData"]["order"]
+        position = {
+            'order_no': order_no, 
+            'transactions_data': get_trades(api = api, order_no = order_no)
+            }
+        logging.info(f'[{symbol} SELL] transaction opened (order no: {order_no})')
+        return position
+    else:
+        logging.info(f'[{symbol} SELL] Transaction failed')  
+
+

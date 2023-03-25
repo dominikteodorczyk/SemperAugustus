@@ -7,8 +7,10 @@ import ssl
 from threading import Thread
 import numpy as np
 from typing import Callable
-from streamtools import AssetBOX, WalletStream
+from streamtools import AssetObservator, WalletStream
 import sys
+from commands import *
+
 
 
 
@@ -81,14 +83,28 @@ class Client():
             #print(f'Not disconnected stream from {self.user.host}')
             self.connection_stream = True
 
-
     def send_n_return(self, packet:dict):
-        try:
-            self.socket_conection.send(json.dumps(packet).encode('utf-8'))
-            answer = self.socket_conection.recv()
-            return json.loads(answer) 
-        except Exception as e:
-            logging.warning(f'No request has been sent, {e}')
+        command_type = packet['command']
+        msg = json.dumps(packet).encode('utf-8')
+        received_data = ''
+        sent = 0
+        while sent < len(msg):
+            sent += self.socket_conection.send(msg[sent:])
+        while True:
+            char = self.socket_conection.recv(4096).decode()
+            received_data += char
+            try:
+                (resp, size) = json.JSONDecoder().raw_decode(received_data)
+                if size == len(received_data):
+                    received_data = ''
+                    break
+                elif size < len(received_data):
+                    received_data = received_data[size:].strip()
+                    break
+            except Exception as e:
+                logging.warning(f'Cant send {command_type}, more: {e}')
+                continue
+        return resp  
 
     def stream_send(self, message:dict):
         return self.socket_stream_conection.send(json.dumps(message).encode('utf-8'))
@@ -101,19 +117,15 @@ class Client():
                 "password": self.user.password
                 } 
             }
-        
         try:
             result = self.send_n_return(packet)
-        except:
-            logging.warning()
-
+        except Exception as e:
+            logging.warning(f'Cant log in, {e}')
         if str(result["status"]) == 'True':
-            #print(f'Login status: {result["status"]}, stream session id: {result["streamSessionId"]}')
             self.login_status = result["status"]
             self.stream_sesion_id = result["streamSessionId"]
             logging.info(f'Logged as {self.user.login} (stream session id: {result["streamSessionId"]})')
         else:
-            #print(f'Login status: {result["status"]}')
             logging.error(f'Not logged')
 
     def logout(self):
@@ -131,7 +143,6 @@ class Client():
             self.login_status = True
     
     def opensession(self):
-
         try:
             for i in range(6):
                 try:
@@ -213,7 +224,9 @@ def stream_session_simulator(time):
 def main():
     api = Client('DEMO')
     api.opensession()
-    AssetBOX(api=api,symbol='EURUSD').stream()
+    #response = buy_transaction(api=api,symbol='BINANCECOIN',volume=0.3)
+    data = sell_transaction(api=api,symbol='BINANCECOIN',volume=0.3)
+    print(data)
     api.closesession()
 
 if __name__ == "__main__":
