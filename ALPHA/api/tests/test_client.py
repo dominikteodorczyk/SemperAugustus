@@ -27,8 +27,8 @@ class Test_Client():
         assert APIobject.connection_stream is None
 
         # create a socket object socketpair for stream and main connection with TLS
-        assert type(APIobject.socket_conection) is ssl.SSLSocket
-        assert type(APIobject.socket_stream_conection) is ssl.SSLSocket
+        assert type(APIobject.socket_connection) is ssl.SSLSocket
+        assert type(APIobject.socket_stream_connection) is ssl.SSLSocket
 
 
     def test_Client_method_connect_is_making_connection(self):
@@ -40,7 +40,7 @@ class Test_Client():
         connection = True
         peer_port = UserDEMO().main_port
         
-        assert APIobject.socket_conection.getpeername()[1] == peer_port
+        assert APIobject.socket_connection.getpeername()[1] == peer_port
         assert APIobject.connection is connection
 
 
@@ -178,7 +178,7 @@ class Test_Decorators():
                 return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})
             
             def streamread(self):
-                message = json.loads(self.api.socket_stream_conection.recv())
+                message = json.loads(self.api.socket_stream_connection.recv())
                 try:
                     if message['command'] == 'balance':
                         self.balance = np.fromiter(message['data'].values(), dtype=float)

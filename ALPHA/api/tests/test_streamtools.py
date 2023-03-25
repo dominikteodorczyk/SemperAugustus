@@ -61,26 +61,26 @@ class Test_AssetBOX():
         # 'candle_1M': candle_1M, 'candle_5M': candle_5M, 'candle_15M': candle_15M, 'price': price}, 
         # returns[1] = args, 
         # returns[2] = kwargs
-        return stream_session_simulator(event_duration)(AssetBOX)(symbol = event_symbol)
+        return stream_session_simulator(event_duration)(AssetObservator)(symbol = event_symbol)
 
     @pytest.mark.parametrize('atribut', ['api','symbol','open_stream_data_M1','open_stream_data_M5','candle_1M','candle_5M',
                                          'candle_15M','candle_1H','price'])
     def test_AssetBOX_have_attribut(self,event_symbol,atribut):
         # A test to see if a class object, when initialized, has a set of defined attributes
-        assert hasattr(AssetBOX(symbol=event_symbol), atribut) is True
+        assert hasattr(AssetObservator(symbol=event_symbol), atribut) is True
 
     def test_AssetBOX_have_Client_as_api_after_init(self, event_symbol):
         # test to check the correctness of assigning objects to attributes
         api = Client('DEMO')
         api.opensession()
-        assert type(AssetBOX(api = api, symbol=event_symbol).api) == Client # should be the same
+        assert type(AssetObservator(api = api, symbol=event_symbol).api) == Client # should be the same
         api.closesession()
 
     def test_AssetBOX_have_event_symbol_as_symbol_after_init(self, event_symbol):
         # test to check the correctness of assigning objects to attributes
         api = Client('DEMO')
         api.opensession()
-        assert AssetBOX(api = api, symbol=event_symbol).symbol == event_symbol # should be the same
+        assert AssetObservator(api = api, symbol=event_symbol).symbol == event_symbol # should be the same
         api.closesession()
 
     @pytest.mark.parametrize('atribut, expected', [('open_stream_data_M1',None),
@@ -90,7 +90,7 @@ class Test_AssetBOX():
         # test to check default attribute values after ninitialization
         api = Client('DEMO')
         api.opensession()
-        assert AssetBOX(api = api, symbol=event_symbol).__getattribute__(atribut) == expected # should be the same
+        assert AssetObservator(api = api, symbol=event_symbol).__getattribute__(atribut) == expected # should be the same
         api.closesession()
 
 
