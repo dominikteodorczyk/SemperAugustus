@@ -1,6 +1,7 @@
-from api.client import Client
-from api.streamtools import WalletStream, AssetObservator
-from api.commands import buy_transaction, sell_transaction
+from ALPHA.api.client import Client
+from ALPHA.api.streamtools import WalletStream, AssetObservator
+from ALPHA.api.commands import buy_transaction, sell_transaction
+
 
 class TradingSlot():
 
@@ -45,8 +46,6 @@ class TradingSession():
 
 
 
-
-
 def main():
     api = Client('DEMO')
     api.open_session()
@@ -55,7 +54,5 @@ def main():
     print(data)
     api.close_session()
 
-if __name__ == "__main__":
-    main()
 
-    
+main()
