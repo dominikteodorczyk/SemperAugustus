@@ -1,6 +1,6 @@
-from ALPHA.api.client import Client
-from ALPHA.api.streamtools import WalletStream, AssetObservator
-from ALPHA.api.commands import buy_transaction, sell_transaction
+from beta.api.client import Client
+from beta.api.streamtools import WalletStream, AssetObservator
+from beta.api.commands import buy_transaction, sell_transaction
 
 
 class TradingSlot():

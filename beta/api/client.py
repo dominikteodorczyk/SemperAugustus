@@ -1,5 +1,5 @@
 import json
-from settings import *
+from .settings import *
 import logging
 from time import sleep
 import socket
