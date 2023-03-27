@@ -1,6 +1,6 @@
-from beta.api.client import Client
-from beta.api.streamtools import WalletStream, AssetObservator
-from beta.api.commands import buy_transaction, sell_transaction
+from api.client import Client
+from api.streamtools import WalletStream, AssetObservator
+from api.commands import buy_transaction, sell_transaction
 
 
 class TradingSlot():
@@ -44,15 +44,10 @@ class TradingSession():
     def session():
         pass
 
-
-
-def main():
+def buy_now():
     api = Client('DEMO')
     api.open_session()
     #response = buy_transaction(api=api,symbol='BINANCECOIN',volume=0.3)
-    data = sell_transaction(api=api,symbol='BINANCECOIN',volume=0.3)
+    data = sell_transaction(api=api,symbol='EURUSD',volume=0.3)
     print(data)
     api.close_session()
-
-
-main()
