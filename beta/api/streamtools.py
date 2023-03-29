@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from time import time
-import logging
+from utils.setup_loger import setup_logger
 
 class Stream():
 
@@ -39,20 +39,16 @@ class WalletStream():
 class PositionObservator():
 
     def __init__(self, api=None, symbol=None, order_no = None) -> None:
-        logging.basicConfig(
-            filename='beta\log\test_position.log',
-            level=logging.INFO,
-            format="%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s",
-            datefmt="%d-%b-%y %H:%M:%S",
-        )
+        self.obs_logger = setup_logger(f'{symbol}-{order_no}','beta\log\obs_logger.log')
+
         self.api = api
         self.symbol = symbol
         self.order_no = order_no
         self.curent_price = np.empty(shape=[0, 11])
         self.profit = None
         self.minute_1 = np.empty(shape=[0, 7])
-        self.minute_5 = None
-        self.minute_15 = None
+        self.minute_5 = np.empty(shape=[0, 7])
+        self.minute_15 = np.empty(shape=[0, 7])
 
         self.minute_1_5box = np.empty(shape=[0, 7])
         self.minute_5_15box = np.empty(shape=[0, 7])
@@ -86,19 +82,19 @@ class PositionObservator():
             dictor.pop('symbol')
             self.minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(1,7)
             self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
-            logging.info(f'{time()} 1MIN: {self.minute_1,}')
+            self.obs_logger.info(f'1MIN: {self.minute_1.tolist()[0]}')
         if message["command"] == 'tickPrices':
             # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
             dictor=message["data"]
             if dictor["symbol"] == self.symbol:
                 dictor.pop('symbol')
                 self.curent_price = np.fromiter(dictor.values(), dtype=float).reshape(1,11)
-                logging.info(f'{time()} TickPrice: {self.curent_price}')
+                self.obs_logger.info(f'PRICE: {self.curent_price.tolist()[0]}')
         if message["command"] == "profit":
             dictor=message["data"]
             if dictor['order2'] == self.order_no: 
                 self.profit = dictor['profit']
-                logging.info(f'{time()} Profit: {self.profit}')
+                self.obs_logger.info(f'PROFIT: {self.profit}')
                 
 
 
@@ -114,7 +110,7 @@ class PositionObservator():
                 self.minute_1_5box[-1,6]]])
             self.minute_1_5box = np.empty(shape=[0, 7])
             self.minute_5_15box = np.vstack([self.minute_5_15box, self.minute_5])
-            logging.info(f'{time()} 5MIN: {self.minute_5}')
+            self.obs_logger.info(f'5MIN: {self.minute_5.tolist()[0]}')
 
         
         if np.shape(self.minute_5_15box)[0] == 3:
@@ -127,7 +123,7 @@ class PositionObservator():
                 self.minute_5_15box[:,5].sum(),
                 self.minute_5_15box[-1,6]]])
             self.minute_5_15box = np.empty(shape=[0, 7])
-            logging.info(f'{time()} 15MIN: {self.minute_15}')
+            self.obs_logger.info(f'15MIN: {self.minute_15.tolist()[0]}')
 
     def stream(self):
         self.subscribe()
