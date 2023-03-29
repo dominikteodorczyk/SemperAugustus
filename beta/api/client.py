@@ -168,6 +168,25 @@ class Client:
         return self.socket_stream_connection.send(
             json.dumps(message).encode("utf-8")
         )
+    
+    def stream_read(self):
+        received_data = ""
+        while True:
+            char = self.socket_stream_connection.recv(4096).decode()
+            received_data += char
+            try:
+                (response, size) = json.JSONDecoder().raw_decode(received_data)
+                if size == len(received_data):
+                    received_data = ""
+                    break
+                elif size < len(received_data):
+                    received_data = received_data[size:].strip()
+                    break
+            except Exception as e:
+                logging.warning(f"Reciving error: {e}")
+                continue
+        return response
+        
 
     def login(self):
         """
