@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from time import time
+import logging
 
 class Stream():
 
@@ -21,7 +22,7 @@ class WalletStream():
         return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})
 
     def streamread(self):
-        message = json.loads(self.api.socket_stream_conection.recv())
+        message = self.api.stream_read()
         try:
             if message['command'] == 'balance':
                 self.balance = np.fromiter(message['data'].values(), dtype=float)
@@ -35,12 +36,21 @@ class WalletStream():
             self.keepalive()
 
 
-class AssetObservator():
+class PositionObservator():
 
-    def __init__(self, api=None, symbol=None) -> None:
+    def __init__(self, api=None, symbol=None, order_no = None) -> None:
+        logging.basicConfig(
+            filename='beta\log\test_position.log',
+            level=logging.INFO,
+            format="%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s",
+            datefmt="%d-%b-%y %H:%M:%S",
+        )
         self.api = api
         self.symbol = symbol
-        self.minute_1 = None
+        self.order_no = order_no
+        self.curent_price = np.empty(shape=[0, 11])
+        self.profit = None
+        self.minute_1 = np.empty(shape=[0, 7])
         self.minute_5 = None
         self.minute_15 = None
 
@@ -52,17 +62,44 @@ class AssetObservator():
         return self.api.stream_send({"command": "getKeepAlive", "streamSessionId": self.api.stream_sesion_id})
 
     def subscribe(self):
-        return self.api.stream_send({"command": "getCandles", "streamSessionId": self.api.stream_sesion_id, "symbol": "EURUSD"})    
+        self.api.stream_send(
+            {"command": "getCandles",
+             "streamSessionId": self.api.stream_sesion_id,
+             "symbol": "EURUSD"}
+        )
+        self.api.stream_send(
+            {"command": "getTickPrices",
+             "streamSessionId": self.api.stream_sesion_id, 
+             "symbol": "EURUSD"}
+        )
+        self.api.stream_send(
+            {"command": "getProfits",
+             "streamSessionId": self.api.stream_sesion_id}
+        )  
 
     def streamread(self):
-        message = json.loads(self.api.socket_stream_conection.recv())
+        message = self.api.stream_read()
         if message['command'] == 'candle':
+            # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
             dictor=message["data"]
             dictor.pop('ctmString')
             dictor.pop('symbol')
             self.minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(1,7)
             self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
-            print(f'{time()} 1MIN: ',self.minute_1,)
+            logging.info(f'{time()} 1MIN: {self.minute_1,}')
+        if message["command"] == 'tickPrices':
+            # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
+            dictor=message["data"]
+            if dictor["symbol"] == self.symbol:
+                dictor.pop('symbol')
+                self.curent_price = np.fromiter(dictor.values(), dtype=float).reshape(1,11)
+                logging.info(f'{time()} TickPrice: {self.curent_price}')
+        if message["command"] == "profit":
+            dictor=message["data"]
+            if dictor['order2'] == self.order_no: 
+                self.profit = dictor['profit']
+                logging.info(f'{time()} Profit: {self.profit}')
+                
 
 
     def make_more_candles(self):
@@ -77,7 +114,7 @@ class AssetObservator():
                 self.minute_1_5box[-1,6]]])
             self.minute_1_5box = np.empty(shape=[0, 7])
             self.minute_5_15box = np.vstack([self.minute_5_15box, self.minute_5])
-            print(f'{time()} 5MIN:',self.minute_5)
+            logging.info(f'{time()} 5MIN: {self.minute_5}')
 
         
         if np.shape(self.minute_5_15box)[0] == 3:
@@ -90,7 +127,7 @@ class AssetObservator():
                 self.minute_5_15box[:,5].sum(),
                 self.minute_5_15box[-1,6]]])
             self.minute_5_15box = np.empty(shape=[0, 7])
-            print(f'{time()} 15MIN: ',self.minute_15)
+            logging.info(f'{time()} 15MIN: {self.minute_15}')
 
     def stream(self):
         self.subscribe()
