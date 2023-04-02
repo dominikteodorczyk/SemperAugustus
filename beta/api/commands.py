@@ -30,6 +30,18 @@ def get_trades(api, order_no=None):
 
     return None
 
+def get_margin(api:object, symbol:str, volume:float):
+
+    message = {
+        "command": "getMarginTrade", 
+        "arguments": {
+            "symbol": symbol,
+            "volume": volume
+        }}
+
+    response = api.send_n_return(message)
+    return response["returnData"]["margin"]
+
 
 def buy_transaction(api: object, symbol: str, volume: float) -> dict:
     """Opens a buy transaction and returns the position information.
@@ -64,22 +76,24 @@ def buy_transaction(api: object, symbol: str, volume: float) -> dict:
     buy_response = api.send_n_return(
         {"command": "tradeTransaction", "arguments": buy_arguments}
     )
+    margin = get_margin(api=api, symbol=symbol, volume=volume)
 
     try:
         order_no = buy_response["returnData"]["order"]
         transactions_data = get_trades(api=api, order_no=order_no)
         position = {
             "order_no": order_no,
-            "transactions_data": transactions_data,
+            "margin" : margin,
+            "transactions_data": transactions_data
         }
     except:
         logging.info(f"[{symbol} BUY] Transaction failed")
-        return None
 
-    if buy_response["status"] and transactions_data:
+    if buy_response["status"] == True and transactions_data != None and margin != None:
         position = {
             "order_no": order_no,
-            "transactions_data": transactions_data,
+            "margin" : margin,
+            "transactions_data": transactions_data
         }
         logging.info(
             f"[{symbol} BUY] transaction opened (order no: {order_no})"
@@ -87,7 +101,6 @@ def buy_transaction(api: object, symbol: str, volume: float) -> dict:
         return position
     else:
         logging.info(f"[{symbol} BUY] transaction failed")
-        return None
 
 
 def sell_transaction(api: object, symbol: str, volume: float) -> dict:
@@ -123,22 +136,24 @@ def sell_transaction(api: object, symbol: str, volume: float) -> dict:
     sell_response = api.send_n_return(
         {"command": "tradeTransaction", "arguments": sell_arguments}
     )
+    margin = get_margin(api=api, symbol=symbol, volume=volume)
 
     try:
         order_no = sell_response["returnData"]["order"]
         transactions_data = get_trades(api=api, order_no=order_no)
         position = {
             "order_no": order_no,
-            "transactions_data": transactions_data,
+            "margin" : margin,
+            "transactions_data": transactions_data
         }
     except:
         logging.info(f"[{symbol} SELL] Transaction failed")
-        return None
 
     if sell_response["status"] and transactions_data:
         position = {
             "order_no": order_no,
-            "transactions_data": transactions_data,
+            "margin" : margin,
+            "transactions_data": transactions_data
         }
         logging.info(
             f"[{symbol} SELL] transaction opened (order no: {order_no})"
@@ -146,4 +161,3 @@ def sell_transaction(api: object, symbol: str, volume: float) -> dict:
         return position
     else:
         logging.info(f"[{symbol} SELL] transaction failed")
-        return None
