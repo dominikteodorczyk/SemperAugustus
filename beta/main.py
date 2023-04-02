@@ -1,3 +1,3 @@
-from trading.broker import buy_now
+from trading.broker import position
 
-buy_now()
+position()
