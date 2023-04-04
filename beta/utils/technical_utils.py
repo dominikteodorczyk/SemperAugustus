@@ -12,3 +12,8 @@ class SessionTechnicalController():
 
     def valid_transaction_status(self):
         pass
+
+
+class AssetParametersObservetor():
+    #TODO: clasa obiektów obserwujących dany walor pod katem jego parametrów technicznych takich jak spread itp
+    pass
