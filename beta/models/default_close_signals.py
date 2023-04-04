@@ -2,35 +2,50 @@ from api.streamtools import *
 from api.commands import *
 from utils.setup_loger import setup_logger
 
+
 class DefaultCloseSignal:
     def __init__(self):
-        self.DCS_logger = setup_logger(
-            "DCS_logger", "beta\log\DCS_logger.log"
-        )
+        self.DCS_logger = setup_logger("DCS_logger", "beta\log\DCS_logger.log")
 
     def init(
-            self, api: object, position_data:dict, sl_start: float = 0.4, tp_min: float = 0.5, 
-            tp_max: float = 0.1,):
-        self.api =api
+        self,
+        api: object,
+        position_data: dict,
+        sl_start: float = 0.35,
+        tp_min: float = 0.5,
+        tp_max: float = 0.1,
+        asymetyric_tp:float = 1
+    ):
+        if position_data["transactions_data"] == None:
+            print('transactions_data = None')
+        self.api = api
         self.symbol = position_data["transactions_data"]["symbol"]
         self.order = position_data["order_no"]
         self.position = position_data["transactions_data"]["position"]
         self.open_price = position_data["transactions_data"]["cmd"]
         self.margin = position_data["margin"]
         self.cmd = position_data["transactions_data"]["cmd"]
+        self.volume = position_data["transactions_data"]["volume"]
+        self.asymetyric_tp = asymetyric_tp
 
         self.sl_start = sl_start
         self.tp_min = tp_min
         self.tp_max = tp_max
 
         self.walet_stream = WalletStream(api=self.api)
-        self.price_data = PositionObservator(api=api, symbol=self.symbol,order_no=self.order)
+        self.price_data = PositionObservator(
+            api=api, symbol=self.symbol, order_no=self.order
+        )
         self.status_to_close = False
 
         if self.cmd == 1:
             self.multiplier_value = 1
         else:
             self.multiplier_value = -1
+
+        self.first_stage_done = False
+        self.secound_stage_done = False
+        self.third_stage_done = False
 
     def subscribe_data(self):
         self.walet_stream.subscribe()
@@ -40,31 +55,73 @@ class DefaultCloseSignal:
         self.walet_stream.streamread()
         self.price_data.streamread()
 
-    def sefault_close_position(self):
-        pass
+    def get_current_percentage(self):
+        try:
+            return (self.price_data.profit / self.margin) * 100
+        except:
+            pass
+
+    def obeserve_and_react(self):
+
+        if self.price_data.minute_1.any() and self.get_current_percentage() > (self.sl_start):
+            print('earnings')
+        elif self.price_data.minute_1.any() and self.get_current_percentage() < (self.asymetyric_tp * self.sl_start):
+            print('candle without earnings')
+            try:
+                if self.get_current_percentage() > (-1 * self.sl_start):
+                    pass
+                else:
+                    close_data = close_position(
+                        api=self.api,
+                        symbol=self.symbol, 
+                        position=self.position,
+                        volume=self.volume, 
+                        cmd=self.cmd)
+                    self.status_to_close = True
+            except:
+                self.DCS_logger.warning(
+                    f'ORDER {self.order} POSITION {self.position} - \
+                    CANT MONITOR FIRST STAGE [TAKEPROFIT-DCS]')
+        elif not self.price_data.minute_1.any():
+            print('lack of candle')
+            try:
+                if self.get_current_percentage() > (-1 * self.sl_start):
+                    pass
+                else:
+                    close_data = close_position(
+                        api=self.api,
+                        symbol=self.symbol, 
+                        position=self.position,
+                        volume=self.volume, 
+                        cmd=self.cmd)
+                    self.status_to_close = True
+            except:
+                self.DCS_logger.warning(
+                    f'ORDER {self.order} POSITION {self.position} - \
+                    CANT MONITOR FIRST STAGE [TAKEPROFIT-DCS]')
+        else:
+            print('error',(not self.price_data.minute_1.any()), type(self.price_data.minute_1))
+            close_data = close_position(
+                        api=self.api,
+                        symbol=self.symbol, 
+                        position=self.position,
+                        volume=self.volume, 
+                        cmd=self.cmd)
+            self.status_to_close = True
 
     def run(self):
         self.subscribe_data()
-        while self.status_to_close is False:
+        while self.status_to_close == False:
             self.read_data()
-            if self.price_data.minute_15.any():
-                self.DCS_logger.info(
-                f"Candle core: {self.price_data.minute_15[0,2] - self.price_data.minute_15[0,1]}"
-                )
-            elif self.price_data.minute_5.any():
-                self.DCS_logger.info(
-                f"Candle core: {self.price_data.minute_5[0,2] - self.price_data.minute_5[0,1]}"
-                )
-            elif self.price_data.minute_1.any():
-                self.DCS_logger.info(
-                f"Candle core: {self.price_data.minute_1[0,2] - self.price_data.minute_1[0,1]}"
-                )
-            else:
-                # self.first_stage_monitor()
+            try:
+                self.obeserve_and_react()
+            except:
                 pass
 
-            # if self.status_to_close == True:
-            #     close_position(api=self.api)
+
+
+
+
 
 
 
@@ -88,10 +145,6 @@ class DefaultCloseSignal:
     #     max_tp_price = candle[0, 1] + (candle[0, 2] - candle[0, 1]) * self.tp_max
     #     min_tp_price = candle[0, 1] + (candle[0, 2] - candle[0, 1]) * self.tp_min
 
-
     #     if self.price_data.minute_1[0, 2] - self.price_data.minute_1[0, 1] > 0 and self.cmd :
-            
-            
-        
 
     #         return self.close_signal
