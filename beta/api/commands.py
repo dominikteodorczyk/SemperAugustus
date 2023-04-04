@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 
 def get_trades(api, order_no=None):
@@ -200,7 +201,9 @@ def close_position(
                 {"command": "getServerTime"}
                 )["returnData"]["time"]
             data_recive = False
+
             while data_recive == False:
+                sleep(1)
                 try:    
                     trades_stats = api.send_n_return(
                         {"command":"getTradesHistory",
