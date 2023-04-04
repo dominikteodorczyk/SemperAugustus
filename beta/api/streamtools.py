@@ -97,7 +97,7 @@ class PositionObservator:
 
     def streamread(self):
         message = self.api.stream_read()
-        if message["command"] == "candle":
+        if message["command"] == "candle" and message["data"]["symbol"] == self.symbol:
             # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
             dictor = message["data"]
             dictor.pop("ctmString")
