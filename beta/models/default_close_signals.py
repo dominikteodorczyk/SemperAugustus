@@ -14,7 +14,7 @@ class DefaultCloseSignal:
         sl_start: float = 0.35,
         tp_min: float = 0.5,
         tp_max: float = 0.1,
-        asymetyric_tp:float = 1
+        asymetyric_tp:float = 0.5
     ):
         if position_data["transactions_data"] == None:
             print('transactions_data = None')
@@ -43,9 +43,8 @@ class DefaultCloseSignal:
         else:
             self.multiplier_value = -1
 
-        self.first_stage_done = False
-        self.secound_stage_done = False
-        self.third_stage_done = False
+        self.acc_earnings_stage = False
+
 
     def subscribe_data(self):
         self.walet_stream.subscribe()
@@ -63,9 +62,25 @@ class DefaultCloseSignal:
 
     def obeserve_and_react(self):
 
-        if self.price_data.minute_1.any() and self.get_current_percentage() > (self.sl_start):
+        if self.price_data.minute_1.any() and self.get_current_percentage() > 0 and self.get_current_percentage() < self.sl_start:
             print('earnings')
-        elif self.price_data.minute_1.any() and self.get_current_percentage() < (self.asymetyric_tp * self.sl_start):
+            if self.get_current_percentage() > self.sl_start * self.asymetyric_tp:
+                self.acc_earnings_stage = True
+                self.sl_start = self.sl_start * self.asymetyric_tp
+            if self.acc_earnings_stage == True:
+                if self.get_current_percentage() < self.sl_start * self.asymetyric_tp:
+                    close_data = close_position(
+                        api=self.api,
+                        symbol=self.symbol, 
+                        position=self.position,
+                        volume=self.volume, 
+                        cmd=self.cmd)
+                    self.status_to_close = True
+                else:
+                    pass
+            else:
+                pass
+        elif self.price_data.minute_1.any() and self.get_current_percentage() < 0:
             print('candle without earnings')
             try:
                 if self.get_current_percentage() > (-1 * self.sl_start):
