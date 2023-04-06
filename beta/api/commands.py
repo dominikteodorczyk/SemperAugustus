@@ -214,15 +214,18 @@ def close_position(
                     for trade in trades_stats["returnData"]:
                         if trade["position"] == position:
                             data_recive = True
+                            print(trade["profit"])
                             return {
                                 "symbol": trade["symbol"],
                                 "order": trade["order2"],
                                 "position": trade["position"],
                                 "cmd": trade["cmd"],
                                 "volume": trade["volume"],
+                                "profit": trade["profit"],
                                 "open_price": trade["open_price"],
                                 "open_time": trade["open_time"],
                                 "close_price":trade["close_price"],
                                 "close_time": trade["close_time"],}
+                        
                 except:
                     pass

@@ -41,10 +41,11 @@ class WalletStream:
             pass
 
     def stream(self):
-        self.subscribe()
-        while self.api.connection_stream == True:
-            self.streamread()
-            self.keepalive()
+    #self.subscribe()
+        #while self.api.connection_stream == True:
+        self.streamread()
+    
+    #    self.keepalive()
 
 
 class PositionObservator:
@@ -86,6 +87,7 @@ class PositionObservator:
                 "command": "getTickPrices",
                 "streamSessionId": self.api.stream_sesion_id,
                 "symbol": "EURUSD",
+                "minArrivalTime": 5000,
             }
         )
         self.api.stream_send(
@@ -97,16 +99,7 @@ class PositionObservator:
 
     def streamread(self):
         message = self.api.stream_read()
-        if message["command"] == "candle" and message["data"]["symbol"] == self.symbol:
-            # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
-            dictor = message["data"]
-            dictor.pop("ctmString")
-            dictor.pop("symbol")
-            self.minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(
-                1, 7
-            )
-            self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
-            self.obs_logger.info(f"1MIN: {self.minute_1.tolist()[0]}")
+
         if message["command"] == "tickPrices":
             # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
             dictor = message["data"]
@@ -115,12 +108,23 @@ class PositionObservator:
                 self.curent_price = np.fromiter(
                     dictor.values(), dtype=float
                 ).reshape(1, 11)
-                self.obs_logger.info(f"PRICE: {self.curent_price.tolist()[0]}")
+                self.obs_logger.info(f"PIRICE: {self.curent_price}")
         if message["command"] == "profit":
             dictor = message["data"]
             if dictor["order2"] == self.order_no:
                 self.profit = dictor["profit"]
                 self.obs_logger.info(f"PROFIT: {self.profit}")
+        if message["command"] == "candle":
+            dictor = message["data"]
+            # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
+            if dictor["symbol"] == self.symbol:
+                dictor.pop("ctmString")
+                dictor.pop("symbol")
+                self.minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(
+                    1, 7
+                )
+                self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
+                self.obs_logger.info(f"1MIN: {self.minute_1.tolist()[0]}")
 
     def make_more_candles(self):
         if np.shape(self.minute_1_5box)[0] == 5:
@@ -141,7 +145,7 @@ class PositionObservator:
             self.minute_5_15box = np.vstack(
                 [self.minute_5_15box, self.minute_5]
             )
-            self.obs_logger.info(f"5MIN: {self.minute_5.tolist()[0]}")
+
 
         if np.shape(self.minute_5_15box)[0] == 3:
             self.minute_15 = np.array(
@@ -158,10 +162,10 @@ class PositionObservator:
                 ]
             )
             self.minute_5_15box = np.empty(shape=[0, 7])
-            self.obs_logger.info(f"15MIN: {self.minute_15.tolist()[0]}")
+
 
     def stream(self):
-        self.subscribe()
-        while self.api.connection_stream == True:
-            self.streamread()
-            self.make_more_candles()
+        #self.subscribe()
+        #while self.api.connection_stream == True:
+        self.streamread()
+        self.make_more_candles()
