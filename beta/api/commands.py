@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 
 def get_trades(api, order_no=None):
@@ -15,20 +16,26 @@ def get_trades(api, order_no=None):
     """
     message = {"command": "getTrades", "arguments": {"openedOnly": True}}
 
-    response = api.send_n_return(message)
-    for trade in response["returnData"]:
-        if trade["order2"] == order_no:
-            return {
-                "symbol": trade["symbol"],
-                "order": order_no,
-                "position": trade["position"],
-                "cmd": trade["cmd"],
-                "volume": trade["volume"],
-                "open_price": trade["open_price"],
-                "open_time": trade["open_time"],
-            }
+    data_recive = False
+    while data_recive == False:
+        try:
+            response = api.send_n_return(message)
+            for trade in response["returnData"]:
+                if trade["order2"] == order_no:
+                    data_recive = True
+                    return {
+                        "symbol": trade["symbol"],
+                        "order": order_no,
+                        "position": trade["position"],
+                        "cmd": trade["cmd"],
+                        "volume": trade["volume"],
+                        "open_price": trade["open_price"],
+                        "open_time": trade["open_time"],
+                    }
 
-    return None
+            return None
+        except:
+            pass
 
 def get_margin(api:object, symbol:str, volume:float):
 
@@ -161,3 +168,64 @@ def sell_transaction(api: object, symbol: str, volume: float) -> dict:
         return position
     else:
         logging.info(f"[{symbol} SELL] transaction failed")
+
+
+
+def close_position(
+        api: object, symbol: str, position:int, volume: float, cmd:int):
+    
+    close_arguments = {
+        "tradeTransInfo": {
+            "cmd": cmd,
+            "customComment": "",
+            "expiration": 0,
+            "order": position,
+            "price": 1.4,
+            "sl": 0,
+            "tp": 0,
+            "symbol": symbol,
+            "type": 2,
+            "volume": volume,
+        }
+    }
+
+    # Send the buy transaction request.
+    close_status = False
+    while close_status == False:
+        close_response = api.send_n_return(
+            {"command": "tradeTransaction", "arguments": close_arguments}
+        )
+        if close_response["status"] == True:
+            close_status = True
+            server_time = api.send_n_return(
+                {"command": "getServerTime"}
+                )["returnData"]["time"]
+            data_recive = False
+
+            while data_recive == False:
+                sleep(1)
+                try:    
+                    trades_stats = api.send_n_return(
+                        {"command":"getTradesHistory",
+                        "arguments":{
+                            "end": 0,
+                            "start": server_time - 10000
+                        }})
+                    for trade in trades_stats["returnData"]:
+                        if trade["position"] == position:
+                            data_recive = True
+                            print(trade["profit"])
+                            return {
+                                "symbol": trade["symbol"],
+                                "order": trade["order2"],
+                                "position": trade["position"],
+                                "cmd": trade["cmd"],
+                                "volume": trade["volume"],
+                                "profit": trade["profit"],
+                                "open_price": trade["open_price"],
+                                "open_time": trade["open_time"],
+                                "close_price":trade["close_price"],
+                                "close_time": trade["close_time"],}
+                        
+                except:
+                    pass
