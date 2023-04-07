@@ -13,7 +13,7 @@ class DefaultCloseSignal:
         self,
         api: object,
         position_data: dict,
-        sl_start: float = 0.35,
+        sl_start: float = 0.5,
         tp_min: float = 0.5,
         tp_max: float = 0.1,
         asymetyric_tp:float = 0.5
@@ -59,9 +59,16 @@ class DefaultCloseSignal:
         self.price_data.subscribe()
 
     def read_data(self):
+        # global status
+        # global walet_stream
+        # global price_data
+        # status = self.status_to_close
+        # walet_stream = self.walet_stream
+        # price_data = self.price_data
+        while self.status_to_close == False:
+            self.walet_stream.stream()
+            self.price_data.stream()
 
-        self.walet_stream.stream()
-        self.price_data.stream()
 
     def get_current_percentage(self):
         try:
@@ -85,7 +92,7 @@ class DefaultCloseSignal:
                 self.not_earnings_stage = False
 
             if self.not_earnings_stage == True:
-                print('not ernings')
+                # self.DCS_logger.info('not ernings')
                 if self.price_data.minute_1.any() and self.get_current_percentage() < 0:
                     try:
                         if self.get_current_percentage() > (-1 * self.sl_start):
@@ -130,7 +137,6 @@ class DefaultCloseSignal:
                     self.status_to_close = True
             
             if self.yes_earnings_stage == True:
-                print('not ernings')
                 if self.acc_earnings_stage_1 == False:
                     if not self.price_data.minute_1.any() and self.get_current_percentage() > 0:
                         if self.get_current_percentage() > 0:
@@ -167,18 +173,23 @@ class DefaultCloseSignal:
             pass
 
     def control_asset(self):
+        # global status
+        # status = self.status_to_close
         while self.status_to_close == False:
             self.obeserve_and_react()
+            sleep(0.01)
         
 
     def run(self):
         self.subscribe_data()
-        #read_thread = Thread(target=self.read_data()).start()
-        #control_thread = Thread(target=self.control_asset()).start()
-        
-        while self.status_to_close == False:
-            self.read_data()
-            self.obeserve_and_react()
+        read_thread = Thread(target=self.read_data, args=())
+        control_thread = Thread(target=self.control_asset, args=())
+
+        read_thread.start()
+        control_thread.start()
+
+        read_thread.join()
+        control_thread.join()
 
 
 

@@ -51,7 +51,7 @@ class WalletStream:
 class PositionObservator:
     def __init__(self, api=None, symbol=None, order_no=None) -> None:
         self.obs_logger = setup_logger(
-            f"{symbol}-{order_no}", "beta\log\obs_logger.log",print=False
+            f"{symbol}-{order_no}", "beta\log\obs_logger.log",print=True
         )
 
         self.api = api
@@ -87,7 +87,6 @@ class PositionObservator:
                 "command": "getTickPrices",
                 "streamSessionId": self.api.stream_sesion_id,
                 "symbol": "EURUSD",
-                "minArrivalTime": 5000,
             }
         )
         self.api.stream_send(
@@ -108,12 +107,12 @@ class PositionObservator:
                 self.curent_price = np.fromiter(
                     dictor.values(), dtype=float
                 ).reshape(1, 11)
-                self.obs_logger.info(f"PIRICE: {self.curent_price}")
+                #self.obs_logger.info(f"PIRICE: {self.curent_price}")
         if message["command"] == "profit":
             dictor = message["data"]
             if dictor["order2"] == self.order_no:
                 self.profit = dictor["profit"]
-                self.obs_logger.info(f"PROFIT: {self.profit}")
+                #self.obs_logger.info(f"PROFIT: {self.profit}")
         if message["command"] == "candle":
             dictor = message["data"]
             # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
