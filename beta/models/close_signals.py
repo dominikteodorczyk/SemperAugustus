@@ -16,10 +16,10 @@ class DefaultCloseSignal:
         sl_start: float = 0.5,
         tp_min: float = 0.5,
         tp_max: float = 0.1,
-        asymetyric_tp:float = 0.5
+        asymetyric_tp: float = 0.5,
     ):
         if position_data["transactions_data"] == None:
-            print('transactions_data = None')
+            print("transactions_data = None")
 
         self.api = api
         self.symbol = position_data["transactions_data"]["symbol"]
@@ -30,13 +30,11 @@ class DefaultCloseSignal:
         self.cmd = position_data["transactions_data"]["cmd"]
         self.volume = position_data["transactions_data"]["volume"]
         self.asymetyric_tp = asymetyric_tp
-        
 
         self.sl_start = sl_start
         self.tp_min = tp_min
         self.tp_max = tp_max
 
-        self.walet_stream = WalletStream(api=self.api)
         self.price_data = PositionObservator(
             api=api, symbol=self.symbol, order_no=self.order
         )
@@ -44,8 +42,10 @@ class DefaultCloseSignal:
 
         if self.cmd == 1:
             self.multiplier_value = 1
+            self.as_bid_position = 0
         else:
             self.multiplier_value = -1
+            self.as_bid_position = 1
 
         self.not_earnings_stage = True
         self.yes_earnings_stage = False
@@ -53,22 +53,15 @@ class DefaultCloseSignal:
         self.acc_earnings_stage_0 = False
         self.acc_earnings_stage_05 = False
         self.acc_earnings_stage_1 = False
+        self.acc_earnings_stage_5 = False
+        self.acc_earnings_stage_15 = False
 
     def subscribe_data(self):
-        self.walet_stream.subscribe()
         self.price_data.subscribe()
 
     def read_data(self):
-        # global status
-        # global walet_stream
-        # global price_data
-        # status = self.status_to_close
-        # walet_stream = self.walet_stream
-        # price_data = self.price_data
         while self.status_to_close == False:
-            self.walet_stream.stream()
             self.price_data.stream()
-
 
     def get_current_percentage(self):
         try:
@@ -76,15 +69,15 @@ class DefaultCloseSignal:
         except:
             pass
 
-    def get_candle_mean(self):
-        mean_prince = (self.price_data.minute_1[0, 2] - self.price_data.minute_1[0, 1]) / 2
-        return self.price_data.minute_1[0, 1] + mean_prince
-
-
-    
+    def get_candle_mean(self, cendle_data):
+        mean_prince = (cendle_data[0, 2] - cendle_data[0, 1]) / 2
+        return cendle_data[0, 1] + mean_prince
 
     def obeserve_and_react(self):
         try:
+            current_price = self.price_data.curent_price[0, self.as_bid_position]
+            self.get_current_percentage()
+
             if self.get_current_percentage() <= 0:
                 self.not_earnings_stage = True
             else:
@@ -92,7 +85,6 @@ class DefaultCloseSignal:
                 self.not_earnings_stage = False
 
             if self.not_earnings_stage == True:
-                # self.DCS_logger.info('not ernings')
                 if self.price_data.minute_1.any() and self.get_current_percentage() < 0:
                     try:
                         if self.get_current_percentage() > (-1 * self.sl_start):
@@ -100,16 +92,18 @@ class DefaultCloseSignal:
                         else:
                             self.closedata = close_position(
                                 api=self.api,
-                                symbol=self.symbol, 
+                                symbol=self.symbol,
                                 position=self.position,
-                                volume=self.volume, 
-                                cmd=self.cmd)
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
                             self.status_to_close = True
 
                     except:
                         self.DCS_logger.warning(
-                            f'ORDER {self.order} POSITION {self.position} - \
-                            CANT MONITOR FIRST STAGE [TAKEPROFIT-DCS]')
+                            f"ORDER {self.order} POSITION {self.position} - \
+                            CANT MONITOR FIRST STAGE [TAKEPROFIT-DCS]"
+                        )
                 elif not self.price_data.minute_1.any():
                     try:
                         if self.get_current_percentage() > (-1 * self.sl_start):
@@ -117,68 +111,155 @@ class DefaultCloseSignal:
                         else:
                             self.closedata = close_position(
                                 api=self.api,
-                                symbol=self.symbol, 
+                                symbol=self.symbol,
                                 position=self.position,
-                                volume=self.volume, 
-                                cmd=self.cmd)
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
                             self.status_to_close = True
 
                     except:
                         self.DCS_logger.warning(
-                            f'ORDER {self.order} POSITION {self.position} - \
-                            CANT MONITOR FIRST STAGE [TAKEPROFIT-DCS]')
-                else:
-                    self.closedata = close_position(
-                                api=self.api,
-                                symbol=self.symbol, 
-                                position=self.position,
-                                volume=self.volume, 
-                                cmd=self.cmd)
-                    self.status_to_close = True
-            
+                            f"ORDER {self.order} POSITION {self.position} - \
+                            CANT MONITOR FIRST STAGE [TAKEPROFIT-DCS]"
+                        )
+
             if self.yes_earnings_stage == True:
+                self.DCS_logger.info("ERNING!")
                 if self.acc_earnings_stage_1 == False:
-                    if not self.price_data.minute_1.any() and self.get_current_percentage() > 0:
+                    if (
+                        not self.price_data.minute_1.any()
+                        and self.get_current_percentage() > 0
+                    ):
                         if self.get_current_percentage() > 0:
                             self.acc_earnings_stage_0 == True
-                        if self.get_current_percentage() > self.sl_start * self.asymetyric_tp:
+                        if (
+                            self.get_current_percentage()
+                            > self.sl_start * self.asymetyric_tp
+                        ):
                             self.acc_earnings_stage_05 == True
 
-                    if self.acc_earnings_stage_05 == True:
-                        if self.get_current_percentage() < self.sl_start * self.asymetyric_tp:
+                if self.price_data.minute_1.any() and self.get_current_percentage() > 0:
+                    self.acc_earnings_stage_1 = True
+
+                if self.price_data.minute_5.any() and self.get_current_percentage() > 0:
+                    self.acc_earnings_stage_5 = True
+
+                if (
+                    self.price_data.minute_15.any()
+                    and self.get_current_percentage() > 0
+                ):
+                    self.acc_earnings_stage_15 = True
+
+                if self.acc_earnings_stage_15 == True:
+                    if current_price > self.get_candle_mean(self.price_data.minute_15):
+                        if self.cmd == 1:
                             self.closedata = close_position(
-                                    api=self.api, symbol=self.symbol, 
-                                    position=self.position, volume=self.volume, cmd=self.cmd)
+                                api=self.api,
+                                symbol=self.symbol,
+                                position=self.position,
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
+                            self.status_to_close = True
+                        if self.cmd == 0:
+                            pass
+                    if current_price < self.get_candle_mean(self.price_data.minute_15):
+                        if self.cmd == 1:
+                            pass
+                        if self.cmd == 0:
+                            self.closedata = close_position(
+                                api=self.api,
+                                symbol=self.symbol,
+                                position=self.position,
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
+                            self.status_to_close = True
+                elif self.acc_earnings_stage_5 == True:
+                    if current_price > self.get_candle_mean(self.price_data.minute_5):
+                        if self.cmd == 1:
+                            self.closedata = close_position(
+                                api=self.api,
+                                symbol=self.symbol,
+                                position=self.position,
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
+                            self.status_to_close = True
+                        if self.cmd == 0:
+                            pass
+                    if current_price < self.get_candle_mean(self.price_data.minute_5):
+                        if self.cmd == 1:
+                            pass
+                        if self.cmd == 0:
+                            self.closedata = close_position(
+                                api=self.api,
+                                symbol=self.symbol,
+                                position=self.position,
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
+                            self.status_to_close = True
+                elif self.acc_earnings_stage_1 == True:
+                    if current_price > self.get_candle_mean(self.price_data.minute_1):
+                        if self.cmd == 1:
+                            self.closedata = close_position(
+                                api=self.api,
+                                symbol=self.symbol,
+                                position=self.position,
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
+                            self.status_to_close = True
+                        if self.cmd == 0:
+                            pass
+                    if current_price < self.get_candle_mean(self.price_data.minute_1):
+                        if self.cmd == 1:
+                            pass
+                        if self.cmd == 0:
+                            self.closedata = close_position(
+                                api=self.api,
+                                symbol=self.symbol,
+                                position=self.position,
+                                volume=self.volume,
+                                cmd=self.cmd,
+                            )
                             self.status_to_close = True
 
-                    elif self.acc_earnings_stage_0 == True:
-                        if self.get_current_percentage() < self.sl_start * 0.1:
-                            self.closedata = close_position(
-                                    api=self.api, symbol=self.symbol, 
-                                    position=self.position, volume=self.volume, cmd=self.cmd)
-                          
-                            self.status_to_close = True
+                elif self.acc_earnings_stage_05 == True:
+                    if (
+                        self.get_current_percentage()
+                        < self.sl_start * self.asymetyric_tp
+                    ):
+                        self.closedata = close_position(
+                            api=self.api,
+                            symbol=self.symbol,
+                            position=self.position,
+                            volume=self.volume,
+                            cmd=self.cmd,
+                        )
+                        self.status_to_close = True
 
+                elif self.acc_earnings_stage_0 == True:
+                    if self.get_current_percentage() < self.sl_start * 0.1:
+                        self.closedata = close_position(
+                            api=self.api,
+                            symbol=self.symbol,
+                            position=self.position,
+                            volume=self.volume,
+                            cmd=self.cmd,
+                        )
 
-                if self.price_data.minute_1.any():
-                    if self.price_data.curent_price - self.get_candle_mean() < 0 and self.cmd == 1 and self.acc_earnings_stage_05 == True:
-                        self.acc_earnings_stage_1 = True
-                    if self.price_data.curent_price - self.get_candle_mean() > 0 and self.cmd == 0 and self.acc_earnings_stage_05 == True:
-                        self.acc_earnings_stage_1 = True
+                        self.status_to_close = True
 
-                if self.acc_earnings_stage_1 == True:
-                    #dorobić funckje odczytującą kolejne świece
-                    pass
         except:
             pass
 
     def control_asset(self):
-        # global status
-        # status = self.status_to_close
         while self.status_to_close == False:
             self.obeserve_and_react()
-            sleep(0.01)
-        
+            sleep(0.001)
 
     def run(self):
         self.subscribe_data()
@@ -190,14 +271,6 @@ class DefaultCloseSignal:
 
         read_thread.join()
         control_thread.join()
-
-
-
-
-
-
-
-
 
     # def first_stage_monitor(self):
     #     if (self.price_data.profit / self.margin) < self.sl_start :
