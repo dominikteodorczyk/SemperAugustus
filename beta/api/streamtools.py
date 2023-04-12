@@ -98,7 +98,6 @@ class PositionObservator:
 
     def streamread(self):
         message = self.api.stream_read()
-
         if message["command"] == "tickPrices":
             # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
             dictor = message["data"]
