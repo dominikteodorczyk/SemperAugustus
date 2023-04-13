@@ -143,7 +143,7 @@ class PositionObservator:
             self.minute_5_15box = np.vstack(
                 [self.minute_5_15box, self.minute_5]
             )
-
+            self.obs_logger.info(f"5 MIN: {self.minute_5.tolist()[0]}")
 
         if np.shape(self.minute_5_15box)[0] == 3:
             self.minute_15 = np.array(
@@ -160,7 +160,7 @@ class PositionObservator:
                 ]
             )
             self.minute_5_15box = np.empty(shape=[0, 7])
-
+            self.obs_logger.info(f"15 MIN: {self.minute_15.tolist()[0]}")
 
     def stream(self):
         #self.subscribe()

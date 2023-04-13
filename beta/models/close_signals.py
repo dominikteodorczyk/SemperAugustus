@@ -13,7 +13,7 @@ class DefaultCloseSignal:
         self,
         api: object,
         position_data: dict,
-        sl_start: float = 0.5,
+        sl_start: float = 5,
         tp_min: float = 0.5,
         tp_max: float = 0.1,
         asymetyric_tp: float = 0.5,
@@ -43,9 +43,11 @@ class DefaultCloseSignal:
         if self.cmd == 1:
             self.multiplier_value = 1
             self.as_bid_position = 0
+            self.cs_function = self.sell_take_profit_signal
         else:
             self.multiplier_value = -1
             self.as_bid_position = 1
+            self.cs_function = self.buy_take_profit_signal
 
         self.not_earnings_stage = True
         self.yes_earnings_stage = False
@@ -261,10 +263,21 @@ class DefaultCloseSignal:
             self.obeserve_and_react()
             sleep(0.001)
 
+
+    def control_asset_easy(self):
+        if self.cmd == 0:
+            while self.status_to_close == False:
+                self.buy_take_profit_signal()
+                sleep(0.001)   
+        if self.cmd == 1:
+            while self.status_to_close == False:
+                self.sell_take_profit_signal()
+                sleep(0.001)             
+
     def run(self):
         self.subscribe_data()
         read_thread = Thread(target=self.read_data, args=())
-        control_thread = Thread(target=self.control_asset, args=())
+        control_thread = Thread(target=self.control_asset_easy, args=())
 
         read_thread.start()
         control_thread.start()
@@ -294,3 +307,114 @@ class DefaultCloseSignal:
     #     if self.price_data.minute_1[0, 2] - self.price_data.minute_1[0, 1] > 0 and self.cmd :
 
     #         return self.close_signal
+
+    def calculate_easy_buy_cs(self, candle, current_price):
+        mean_candle_value = self.get_candle_mean(candle)
+        
+        
+        if current_price > mean_candle_value:
+            pass
+        else:
+            self.closedata = close_position(
+                api=self.api,symbol=self.symbol,position=self.position,
+                volume=self.volume,cmd=self.cmd,)
+            self.DCS_logger.info(f'Current: {current_price}, Mean {mean_candle_value}')
+            self.status_to_close = True
+
+    def calculate_easy_sell_cs(self, candle, current_price):
+        mean_candle_value = self.get_candle_mean(candle)
+        
+        if current_price < mean_candle_value:
+            pass
+        else:
+            self.closedata = close_position(
+                api=self.api,symbol=self.symbol,position=self.position,
+                volume=self.volume,cmd=self.cmd,)
+            self.DCS_logger.info(f'Current: {current_price}, Mean {mean_candle_value}')
+            self.status_to_close = True
+
+
+    def buy_take_profit_signal(self):
+
+        try:
+            current_price = self.price_data.curent_price[0, self.as_bid_position]
+            current_percentage = self.get_current_percentage()
+
+            if current_percentage <= 0:
+
+                if current_percentage > (-1 * self.sl_start):
+                    pass
+                else:
+                    self.closedata = close_position(
+                                    api=self.api,
+                                    symbol=self.symbol,
+                                    position=self.position,
+                                    volume=self.volume,
+                                    cmd=self.cmd,
+                                )
+                    self.status_to_close = True
+
+            if current_percentage > 0:
+                if self.price_data.minute_15.any():
+                    self.DCS_logger.info('15 min')
+                    self.calculate_easy_buy_cs(self.price_data.minute_15,current_price)
+                elif self.price_data.minute_5.any():
+                    self.DCS_logger.info('5 MIN')
+                    self.calculate_easy_buy_cs(self.price_data.minute_5,current_price)
+                elif self.price_data.minute_1.any():
+                    self.DCS_logger.info('1 MIN')
+                    self.calculate_easy_buy_cs(self.price_data.minute_1,current_price)
+                elif not self.price_data.minute_1.any():
+                    pass
+                else:
+                    self.DCS_logger.info('PASS')
+
+        except:
+            pass
+        
+
+
+
+    def sell_take_profit_signal(self):
+
+        try:
+            current_price = self.price_data.curent_price[0, self.as_bid_position]
+            current_percentage = self.get_current_percentage()
+
+            if current_percentage <= 0:
+
+                if current_percentage > (-1 * self.sl_start):
+                    pass
+                else:
+                    self.closedata = close_position(
+                                    api=self.api,
+                                    symbol=self.symbol,
+                                    position=self.position,
+                                    volume=self.volume,
+                                    cmd=self.cmd,
+                                )
+                    self.status_to_close = True
+
+            if current_percentage > 0:
+                if self.price_data.minute_15.any():
+                    self.DCS_logger.info(f'15 min')
+                    self.calculate_easy_sell_cs(self.price_data.minute_15,current_price)
+                elif self.price_data.minute_5.any():
+                    self.DCS_logger.info('5 MIN')
+                    self.calculate_easy_sell_cs(self.price_data.minute_5,current_price)
+                elif self.price_data.minute_1.any():
+                    self.DCS_logger.info('1 MIN')
+                    self.calculate_easy_sell_cs(self.price_data.minute_1,current_price)
+                elif not self.price_data.minute_1.any():
+                    pass
+                else:
+                    self.DCS_logger.info('PASS')
+
+
+        except:
+            pass
+        
+
+
+
+
