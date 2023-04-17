@@ -1,5 +1,7 @@
 import logging
 from time import sleep
+import pandas
+import numpy as np
 
 
 def get_trades(api, order_no=None):
@@ -18,6 +20,7 @@ def get_trades(api, order_no=None):
 
     data_recive = False
     while data_recive == False:
+        sleep(1)
         try:
             response = api.send_n_return(message)
             for trade in response["returnData"]:
@@ -214,7 +217,6 @@ def close_position(
                     for trade in trades_stats["returnData"]:
                         if trade["position"] == position:
                             data_recive = True
-                            print(trade["profit"])
                             return {
                                 "symbol": trade["symbol"],
                                 "order": trade["order2"],
@@ -225,7 +227,51 @@ def close_position(
                                 "open_price": trade["open_price"],
                                 "open_time": trade["open_time"],
                                 "close_price":trade["close_price"],
-                                "close_time": trade["close_time"],}
-                        
+                                "close_time": trade["close_time"],} 
                 except:
                     pass
+
+def get_historical_candles(api, symbol:str, shift:int, period:int = 1):
+    #shift its a offset in minutes
+    start_times = get_server_time(api) - (shift * 60000)
+    historical_data = np.empty(shape=[0, 6])
+    data_status = False
+    while data_status == False:
+        try:
+            data = api.send_n_return(
+                            {"command": "getChartLastRequest",
+                            "arguments": {
+                                "info": {
+                                    "period": period,
+                                    "start": start_times,
+                                    "symbol": symbol
+                                }
+                            }
+                        })
+            print(data)
+            candles_data = data["returnData"]["rateInfos"]
+            for candle in candles_data:
+                candle.pop("ctmString")
+                candle_data = np.fromiter(
+                    candle.values(), dtype=float
+                ).reshape(1, 6)
+                candle_data[0,2] = candle_data[0,1] + candle_data[0,2]
+                candle_data[0,3] = candle_data[0,1] + candle_data[0,3]
+                candle_data[0,4] = candle_data[0,1] + candle_data[0,4]
+                historical_data = np.vstack([historical_data, candle_data])
+            
+            data_status = True
+        except:
+            sleep(2)
+    return historical_data
+
+
+def get_server_time(api):
+    #1k to sekunda
+    data = api.send_n_return({"command": "getServerTime"})
+    print(data)
+    return data["returnData"]["time"]
+
+
+
+    
