@@ -122,7 +122,6 @@ class PositionObservator:
                     1, 7
                 )
                 self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
-                self.obs_logger.info(f"1MIN: {self.minute_1.tolist()[0]}")
 
     def make_more_candles(self):
         if np.shape(self.minute_1_5box)[0] == 5:
@@ -143,7 +142,6 @@ class PositionObservator:
             self.minute_5_15box = np.vstack(
                 [self.minute_5_15box, self.minute_5]
             )
-            self.obs_logger.info(f"5 MIN: {self.minute_5.tolist()[0]}")
 
         if np.shape(self.minute_5_15box)[0] == 3:
             self.minute_15 = np.array(
@@ -160,7 +158,6 @@ class PositionObservator:
                 ]
             )
             self.minute_5_15box = np.empty(shape=[0, 7])
-            self.obs_logger.info(f"15 MIN: {self.minute_15.tolist()[0]}")
 
     def stream(self):
         #self.subscribe()
