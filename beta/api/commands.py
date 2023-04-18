@@ -269,7 +269,6 @@ def get_historical_candles(api, symbol:str, shift:int, period:int = 1):
 def get_server_time(api):
     #1k to sekunda
     data = api.send_n_return({"command": "getServerTime"})
-    print(data)
     return data["returnData"]["time"]
 
 
