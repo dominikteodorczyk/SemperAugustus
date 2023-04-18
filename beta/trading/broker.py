@@ -75,7 +75,7 @@ def position():
     cmd = 1
     while api.connection_stream == True:
         position = Position(
-            api=api,cmd=cmd,symbol='EURUSD',volume=0.01,
+            api=api,cmd=cmd,symbol='EURUSD',volume=0.05,
             close_signal=DefaultCloseSignal(),)
         
         position_result = position.run()
