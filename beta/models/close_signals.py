@@ -13,7 +13,7 @@ class DefaultCloseSignal:
         self,
         api: object,
         position_data: dict,
-        sl_start: float = 5,
+        sl_start: float = 2,
         tp_min: float = 0.5,
         tp_max: float = 0.1,
         asymetyric_tp: float = 0.5,
@@ -356,14 +356,12 @@ class DefaultCloseSignal:
 
             if current_percentage > 0:
                 if self.price_data.minute_15.any():
-                    self.DCS_logger.info('15 min')
                     self.calculate_easy_buy_cs(self.price_data.minute_15,current_price)
                 elif self.price_data.minute_5.any():
-                    self.DCS_logger.info('5 MIN')
                     self.calculate_easy_buy_cs(self.price_data.minute_5,current_price)
                 elif self.price_data.minute_1.any():
-                    self.DCS_logger.info('1 MIN')
-                    self.calculate_easy_buy_cs(self.price_data.minute_1,current_price)
+                    pass
+                    #self.calculate_easy_buy_cs(self.price_data.minute_1,current_price)
                 elif not self.price_data.minute_1.any():
                     pass
                 else:
@@ -397,14 +395,12 @@ class DefaultCloseSignal:
 
             if current_percentage > 0:
                 if self.price_data.minute_15.any():
-                    self.DCS_logger.info(f'15 min')
                     self.calculate_easy_sell_cs(self.price_data.minute_15,current_price)
                 elif self.price_data.minute_5.any():
-                    self.DCS_logger.info('5 MIN')
                     self.calculate_easy_sell_cs(self.price_data.minute_5,current_price)
                 elif self.price_data.minute_1.any():
-                    self.DCS_logger.info('1 MIN')
-                    self.calculate_easy_sell_cs(self.price_data.minute_1,current_price)
+                    pass
+                    #self.calculate_easy_sell_cs(self.price_data.minute_1,current_price)
                 elif not self.price_data.minute_1.any():
                     pass
                 else:
