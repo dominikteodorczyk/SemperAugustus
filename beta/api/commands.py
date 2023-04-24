@@ -248,7 +248,6 @@ def get_historical_candles(api, symbol:str, shift:int, period:int = 1):
                                 }
                             }
                         })
-            print(data)
             candles_data = data["returnData"]["rateInfos"]
             for candle in candles_data:
                 candle.pop("ctmString")

@@ -174,7 +174,7 @@ class AssetObservator():
         self.symbol = symbol
         self.shift = 60 #parametr ustawiony na sztywno
         self.base_data = get_historical_candles(api=api,symbol=self.symbol, shift=60, period=period)
-        self.minute_1 = np.empty(shape=[0, 7])
+        self.minute_1 = None
 
     def subscribe(self):
         self.api.stream_send(
@@ -193,13 +193,13 @@ class AssetObservator():
             if dictor["symbol"] == self.symbol:
                 dictor.pop("ctmString")
                 dictor.pop("symbol")
+                dictor.pop('quoteId')
                 minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(
-                    1, 7
+                    1, 6
                 )
                 self.base_data = np.vstack([self.base_data, minute_1])
                 self.base_data = self.base_data[-self.shift:, :]
 
-                print(self.base_data)
 
 
     def stream(self):

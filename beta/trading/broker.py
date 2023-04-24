@@ -3,6 +3,7 @@ from api.streamtools import WalletStream, PositionObservator
 from api.commands import buy_transaction, sell_transaction, close_position
 from threading import Thread
 from models.close_signals import *
+from models.trends import MovingAVG
 from time import sleep
 from utils.setup_loger import setup_logger
 
@@ -72,10 +73,14 @@ class TradingSession():
 def position():
     api = Client('DEMO')
     api.open_session()
-    cmd = 1
+    model = MovingAVG(api=api,symbol='US500', period=1)
+    model.run()
+    sleep(5)
     while api.connection_stream == True:
+        cmd = model.signal
+        print(f'Pozycja: {cmd}')
         position = Position(
-            api=api,cmd=cmd,symbol='EURUSD',volume=0.05,
+            api=api,cmd=cmd,symbol='US500',volume=0.05,
             close_signal=DefaultCloseSignal(),)
         
         position_result = position.run()
