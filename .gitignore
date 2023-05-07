@@ -133,4 +133,4 @@ dmypy.json
 beta/docs/*.docx
 beta/docs/*.pdf 
 *.ipynb
-*main.py
+beta/main.py

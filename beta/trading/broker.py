@@ -58,7 +58,18 @@ class Position():
 
 
 
+class PrinterSybolsA():
 
+    def __init__(self,api) -> None:
+        self.api = api
+        self.zmienna = 0
+
+    def print_data(self,data):
+        while self.api.connection_stream == True:
+            print(data)
+            self.zmienna += 1
+            print(self.zmienna)
+            sleep(1)
 
 
 
@@ -66,21 +77,45 @@ class TradingSession():
 
     def __init__(self):
         self.api = Client('DEMO')
+        # ['BITCOIN','BINANCECOIN','AAVE','APECOIN','FANTOM','DOGECOIN']
+        self.symbol_data = DataStream(api=self.api,symbols=['BITCOIN','BINANCECOIN','AAVE','APECOIN','FANTOM','DOGECOIN'])
+        self.printerA = PrinterSybolsA(api=self.api)
 
-    def session():
-        pass
+
+    def session(self):
+        self.api.open_session()
+
+        thread_prices = Thread(target=self.symbol_data.runAA, args=())
+        thread_print = Thread(target=self.printerA.print_data, args=(self.symbol_data.symbols_price,))
+
+
+        thread_prices.start()
+        thread_print.start()
+
+        sleep(8)
+        self.api.connection_stream = False
+        thread_prices.join()
+        thread_print.join()
+
+
+
+        self.api.close_session()
+
+
+
+
 
 def position():
     api = Client('DEMO')
     api.open_session()
-    model = MovingAVG(api=api,symbol='US500', period=1)
+    model = MovingAVG(api=api,symbol='BITCOIN', period=1)
     model.run()
     sleep(5)
     while api.connection_stream == True:
         cmd = model.signal
         print(f'Pozycja: {cmd}')
         position = Position(
-            api=api,cmd=cmd,symbol='US500',volume=0.05,
+            api=api,cmd=cmd,symbol='BITCOIN',volume=0.01,
             close_signal=DefaultCloseSignal(),)
         
         position_result = position.run()
@@ -94,3 +129,5 @@ def position():
         sleep(2)
 
     api.close_session()
+
+
