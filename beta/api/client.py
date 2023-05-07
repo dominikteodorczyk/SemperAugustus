@@ -7,7 +7,6 @@ from threading import Thread
 import sys
 from utils.setup_loger import setup_logger
 
-
 class Client:
     """
     A client that connects to a server in either REAL or DEMO mode.
@@ -296,13 +295,11 @@ def session_simulator(func) -> tuple:
             keyword arguments.
     """
     api = Client(mode="DEMO")
-
     def wrapper(*args, **kwargs):
         api.open_session()
         result = func(api=api, *args, **kwargs)
         api.close_session()
         return result, args, kwargs
-
     wrapper.attrib = api
     return wrapper
 
@@ -322,7 +319,6 @@ def stream_session_simulator(time):
 
     def decorator(func):
         api = Client(mode="DEMO")
-
         def wrapper(*args, **kwargs):
             api.open_session()
             object = func(api=api, *args, **kwargs)
@@ -331,7 +327,6 @@ def stream_session_simulator(time):
             result = object.__dict__
             api.close_session()
             return result, args, kwargs
-
         wrapper.attrib = api
         return wrapper
 
