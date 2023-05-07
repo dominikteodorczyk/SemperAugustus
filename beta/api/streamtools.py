@@ -4,6 +4,8 @@ from time import time
 from utils.setup_loger import setup_logger
 from api.client import Client
 from api.commands import get_historical_candles
+from threading import Thread
+from time import sleep
 
 
 class Stream:
@@ -43,9 +45,9 @@ class WalletStream:
             pass
 
     def stream(self):
-    #self.subscribe()
-        #while self.api.connection_stream == True:
-        self.streamread()
+        self.subscribe()
+        while self.api.connection_stream == True:
+            self.streamread()
     
     #    self.keepalive()
 
@@ -206,3 +208,123 @@ class AssetObservator():
         self.subscribe()
         while self.api.connection_stream == True:
             self.streamread()
+
+
+
+
+
+
+class DataStream():
+
+    def __init__(self, api:Client, symbols:list = None):
+        self.api = api
+        self.symbols = symbols
+        self.server_time = None
+        self.wallet = WalletStream(api=self.api)
+        self.tick_msg = None
+        self.candle_msg = None
+        self.symbols_price = self.generate_symbols()
+        self.symbols_last_1M = self.generate_symbols()
+
+    def generate_symbols(self):
+        symbols_dict = dict()
+        for symbol in self.symbols:
+            symbols_dict[symbol] = None
+        return symbols_dict
+
+    def subscribe_prices(self):
+        for symbol in self.symbols:
+            self.api.stream_send({
+                "command": "getTickPrices",
+                "streamSessionId": self.api.stream_sesion_id,
+                "symbol": symbol})
+
+    def subscribe_candles(self):
+        for symbol in self.symbols:
+            self.api.stream_send({
+                "command": "getCandles",
+                "streamSessionId": self.api.stream_sesion_id,
+                "symbol": symbol})
+        
+    def read_prices(self):
+        message = self.api.stream_read()
+        if message["command"] == "tickPrices":
+            # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
+            dictor = message["data"]
+            tick_symbol = message["data"]["symbol"]
+            dictor.pop("symbol")
+            self.symbols_price[tick_symbol] = np.fromiter(
+                                                dictor.values(), dtype=float).reshape(1, 11)
+            print('PRICES:',self.symbols_price)
+    
+    def read_last_1M(self):
+        message = self.api.stream_read()
+        if message["command"] == "candle":
+            dictor = message["data"]
+            # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
+            tick_symbol = message["data"]["symbol"]
+            dictor.pop("symbol")
+            dictor.pop('quoteId')
+            dictor.pop("ctmString")
+            self.symbols_last_1M[tick_symbol] = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)
+            print('CANDLES:',self.symbols_last_1M)
+
+    def read_stream_messages(self):
+        self.subscribe_prices() and self.subscribe_candles()
+        while self.api.connection_stream == True:
+            message = self.api.stream_read()
+            if message["command"] == "tickPrices":
+                self.tick_msg = message
+            if message["command"] == "candle":
+                self.candle_msg = message
+
+    def read_pricesAA(self):
+        while self.api.connection_stream == True:
+            try:
+                dictor = self.tick_msg["data"]
+                # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
+                tick_symbol = self.tick_msg["data"]["symbol"]
+                dictor.pop("symbol")
+                self.symbols_price[tick_symbol] = np.fromiter(dictor.values(), dtype=float).reshape(1, 11)
+            except:
+                pass
+    
+    def read_last_1MAA(self):
+        while self.api.connection_stream == True:
+            try:
+                dictor = self.candle_msg["data"]
+                # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
+                tick_symbol = dictor["symbol"]
+                for key in ["symbol",'quoteId',"ctmString"]: dictor.pop(key)
+                self.symbols_last_1M[tick_symbol] = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)
+            except:
+                pass
+
+    def run(self):
+        while self.api.connection_stream == True:
+            self.read_stream_messages()
+            
+
+    def runAA(self):
+        thread_read = Thread(target=self.run, args=())
+        thread_prices = Thread(target=self.read_pricesAA, args=())
+        thread_candles = Thread(target=self.read_last_1MAA, args=())
+
+
+        thread_read.start()
+        
+        while True:
+            if self.candle_msg == None and self.tick_msg == None:
+                pass
+            else:
+                break
+
+        thread_prices.start()
+        thread_candles.start()
+
+        thread_read.join()
+        thread_prices.join()
+        thread_candles.join()
+
+            
+
