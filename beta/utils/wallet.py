@@ -7,7 +7,4 @@ class Wallet():
         pass
 
     def run(self):
-        while True:
-            print('Wallet')
-            self.testwallet += 1
-            sleep(1)
+        pass
