@@ -1,20 +1,98 @@
 from api.client import Client
-from api.streamtools import WalletStream, PositionObservator
-from api.commands import buy_transaction, sell_transaction, close_position
+from api.commands import buy_transaction, sell_transaction
 from threading import Thread
 from models.close_signals import *
 from models.trends import MovingAVG
 from time import sleep
 from utils.setup_loger import setup_logger
+from utils.wallet import Wallet
+from utils.technical_utils import SessionTechnicalController
+import logging
 
 
+class TradingSession(object):
+
+    def __init__(self, symbols:list = None) -> None:
+        self.symbols = symbols
+        # init object with risk data and portfolio management
+        self.wallet = Wallet() 
+        # init object containing data on technical aspects of the session 
+        # such as (spread, volume levels, volatility)
+        self.session_control = SessionTechnicalController(symbols=symbols)
+        # init trading pool object of all symbols
+        self.trading_pool = TradingPool(symbols = symbols)
+        
+
+    def session_init(self):
+        # Initialization of threads for the risk manager, session controller and trading pool
+        wallet_thread = Thread(
+            target=self.wallet.run, 
+            args=())
+        
+        session_control_thread = Thread(
+            target=self.session_control.run, 
+            args=())
+        
+        trading_pool_thread = Thread(
+            target=self.trading_pool.run_pool, 
+            args=(self.wallet, self.session_control))
+
+        wallet_thread.start()
+        session_control_thread.start()
+        trading_pool_thread.start()
+
+        wallet_thread.join()
+        session_control_thread.join()
+        trading_pool_thread.join()
+
+#TODO: moduł testowany na końcu
+class TradingPool(object):
+
+    def __init__(self, symbols) -> None:
+        self.symbols = symbols
+
+    def run_pool(self, risk_data, session_data):
+        self.risk_data = risk_data
+        self.session_data = session_data
+
+        for symbol in self.symbols:
+            thread = Thread(
+                target=TradingSlot(symbol), 
+                args=(self.risk_data, self.session_data))
+            thread.start()
 
 
-
-class TradingSlot:
-    def __init__(self, api, symbol):
+class TradingSlot(object):
+    def __init__(self, symbol):
         self.symbol = symbol
-        self.api = api
+        self.symbol_data = DataStream(symbol=self.symbol)
+        self.open_model = MovingAVG()
+        self.close_model = DefaultCloseSignal()
+
+    def run_slot(self, risk_data, session_data):
+        # data stream thread with a separate api client
+        data_thread = Thread(
+            target=self.symbol_data.run, 
+            args=())
+        # trading thread on a given symbol using stream data for the symbol, 
+        # as well as risk and technical session fitness data
+        position_thread = Thread(
+            target=Trader(), 
+            args=(risk_data,session_data,))
+
+        data_thread.start()
+        position_thread.start()
+
+        data_thread.join()
+        position_thread.join()
+
+
+class Trader(object):
+    def __init__(self) -> None:
+        self.api = Client('DEMO')
+
+    def run(self):
+        pass
 
 
 class Position:
@@ -60,68 +138,7 @@ class Position:
     # raz wykorzystane modele do zawarcia transacki oraz zakończenia
 
 
-class PrinterSybolsA:
-    def __init__(self) -> None:
-        self.zmienna = 0
 
-    def print_data(self, data):
-        while True:
-            # print(data)
-            self.zmienna += 1
-            # print(self.zmienna)
-            sleep(1)
-
-
-class TradingSession:
-    def __init__(self, symbols: list = None):
-        # self.api = Client('DEMO')
-        # ['BITCOIN','BINANCECOIN','AAVE','APECOIN','FANTOM','DOGECOIN']
-
-        self.printerA = PrinterSybolsA()
-        self.printerB = PrinterSybolsA()
-
-    def sessionA(self):
-        api = Client("DEMO")
-        api.open_session()
-        symbol_dataA = DataStream(api=api, symbols=["BITCOIN", "BINANCECOIN"])
-        thread_prices = Thread(target=symbol_dataA.runAA, args=())
-        thread_print = Thread(
-            target=self.printerA.print_data, args=(symbol_dataA.symbols_price,)
-        )
-        thread_prices.start()
-        # thread_print.start()
-        thread_prices.join()
-        # thread_print.join()
-        api.connection_stream = False
-        api.close_session()
-
-    def sessionB(self):
-        api = Client("DEMO")
-        api.open_session()
-        symbol_dataB = DataStream(api=api, symbols=["FANTOM", "DOGECOIN"])
-        thread_prices = Thread(target=symbol_dataB.runAA, args=())
-        thread_print = Thread(
-            target=self.printerB.print_data, args=(symbol_dataB.symbols_price,)
-        )
-
-        thread_prices.start()
-        # thread_print.start()
-        thread_prices.join()
-        # thread_print.join()
-        api.connection_stream = False
-        api.close_session()
-
-    def run(self):
-        symbol_thread_1 = Thread(target=self.sessionA, args=())
-        symbol_thread_2 = Thread(target=self.sessionB, args=())
-
-        symbol_thread_1.start()
-        symbol_thread_2.start()
-
-        sleep(20)
-
-        symbol_thread_1.join()
-        symbol_thread_2.join()
 
 
 def position():
