@@ -245,32 +245,26 @@ class DataStream():
                 self.tick_msg = message
             if message["command"] == "candle":
                 self.candle_msg = message
-                print(self.candle_msg)
 
     def read_prices(self):
         while self.api.connection_stream == True:
             try:
                 dictor = self.tick_msg["data"]
                 # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
-                tick_symbol = self.tick_msg["data"]["symbol"]
                 dictor.pop("symbol")
-                self.symbols_price[tick_symbol] = np.fromiter(dictor.values(), dtype=float).reshape(1, 11)
-                sleep(0.1)
+                self.symbols_price = np.fromiter(dictor.values(), dtype=float).reshape(1, 11)
             except:
-                pass
+                sleep(0.5)
     
     def read_last_1M(self):
         while self.api.connection_stream == True:
             try:
                 dictor = self.candle_msg["data"]
                 # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
-                tick_symbol = dictor["symbol"]
                 for key in ["symbol",'quoteId',"ctmString"]: dictor.pop(key)
-                self.symbols_last_1M[tick_symbol] = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)
-                print(self.symbols_last_1M)
-                sleep(1)
+                self.symbols_last_1M = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)              
             except:
-                pass
+                sleep(1)
 
     def stream_read(self):
         while self.api.connection_stream == True:

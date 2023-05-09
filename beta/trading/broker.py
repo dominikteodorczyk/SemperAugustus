@@ -54,13 +54,16 @@ class TradingPool(object):
     def run_pool(self, risk_data, session_data):
         self.risk_data = risk_data
         self.session_data = session_data
-
+        
+        slots = []
         for symbol in self.symbols:
             thread = Thread(
                 target=TradingSlot(symbol).run_slot, 
                 args=(self.risk_data, self.session_data))
             thread.start()
-            thread.join()
+            slots.append(thread)
+        
+        for slot in slots: slot.join()
 
 
 class TradingSlot(object):
@@ -79,7 +82,7 @@ class TradingSlot(object):
         # as well as risk and technical session fitness data
         position_thread = Thread(
             target=Trader().run, 
-            args=(risk_data,session_data,))
+            args=(self.symbol_data, risk_data,session_data,))
 
         data_thread.start()
         position_thread.start()
@@ -92,8 +95,11 @@ class Trader(object):
     def __init__(self) -> None:
         self.api = Client('DEMO')
 
-    def run(self,risk_data,session_data):
-        pass
+    def run(self,symbol_data, risk_data,session_data):
+        while True:
+            print(symbol_data.symbols_price)
+            print(symbol_data.symbols_last_1M)
+            sleep(1)
 
 
 class Position:
