@@ -57,17 +57,18 @@ class TradingPool(object):
 
         for symbol in self.symbols:
             thread = Thread(
-                target=TradingSlot(symbol), 
+                target=TradingSlot(symbol).run_slot, 
                 args=(self.risk_data, self.session_data))
             thread.start()
+            thread.join()
 
 
 class TradingSlot(object):
     def __init__(self, symbol):
         self.symbol = symbol
         self.symbol_data = DataStream(symbol=self.symbol)
-        self.open_model = MovingAVG()
-        self.close_model = DefaultCloseSignal()
+        # self.open_model = MovingAVG()
+        # self.close_model = DefaultCloseSignal()
 
     def run_slot(self, risk_data, session_data):
         # data stream thread with a separate api client
@@ -77,7 +78,7 @@ class TradingSlot(object):
         # trading thread on a given symbol using stream data for the symbol, 
         # as well as risk and technical session fitness data
         position_thread = Thread(
-            target=Trader(), 
+            target=Trader().run, 
             args=(risk_data,session_data,))
 
         data_thread.start()
@@ -91,7 +92,7 @@ class Trader(object):
     def __init__(self) -> None:
         self.api = Client('DEMO')
 
-    def run(self):
+    def run(self,risk_data,session_data):
         pass
 
 
