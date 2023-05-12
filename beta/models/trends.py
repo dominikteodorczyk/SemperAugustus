@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from threading import Thread
 from time import sleep
 from matplotlib.animation import FuncAnimation
+from api.commands import get_historical_candles
 
 
 class MovingAVG():
@@ -14,10 +15,9 @@ class MovingAVG():
         self.api = api
         self.symbol = symbol
         self.period = period
-        self.base_data = None
+        self.base_data = get_historical_candles(api=api,symbol=self.symbol, shift=60, period=period)
         self.means = np.empty(shape=[0, 5])
         self.mean = np.empty(shape=[0, 5])
-        self.observator = AssetObservator(api=api,symbol=self.symbol,period=period)
         self.signal = None
 
     
@@ -30,17 +30,19 @@ class MovingAVG():
         self.mean = data
 
 
-    def data_stream(self):
-        self.observator.subscribe()
-        while self.api.connection_stream == True:
-                self.base_data = self.observator.base_data
-                self.get_means()
-                print(self.mean)
-                if self.mean[1] > self.mean[3]:
-                    self.signal = 0
-                if self.mean[1] < self.mean[3]:
-                    self.signal = 1
-                self.observator.streamread()
+    def market_observe(self, symbol_data):
+        pass
+        # while self.api.connection_stream == True:
+            #TODO: przypisywanie aktualnej wartosci aktywów i bierzących candles jeśli są nowe
+            # if symbol_data.
+            #     self.get_means()
+            #     print(self.mean)
+            #     if self.mean[1] > self.mean[3]:
+            #         self.signal = 0
+            #     if self.mean[1] < self.mean[3]:
+            #         self.signal = 1
+
+
                 
 
 
