@@ -81,7 +81,7 @@ class TradingSlot(object):
         # trading thread on a given symbol using stream data for the symbol, 
         # as well as risk and technical session fitness data
         position_thread = Thread(
-            target=Trader().run, 
+            target=Trader(symbol=self.symbol).run, 
             args=(self.symbol_data, risk_data,session_data,))
 
         data_thread.start()
@@ -92,13 +92,14 @@ class TradingSlot(object):
 
 
 class Trader(object):
-    def __init__(self) -> None:
+    def __init__(self,symbol) -> None:
         self.api = Client('DEMO')
+        self.symbol = symbol
 
     def run(self,symbol_data, risk_data,session_data):
         while True:
-            print(symbol_data.symbols_price)
-            print(symbol_data.symbols_last_1M)
+            # print(f'{self.symbol} PRICE: {symbol_data.symbols_price}')
+            # print(f'{self.symbol} CANDLE: {symbol_data.symbols_last_1M}')
             sleep(1)
 
 
@@ -106,7 +107,7 @@ class Position:
     def __init__(
         self, api, cmd, symbol: str, volume: float, close_signal: object = None
     ):
-        self.api = api
+        self.api = Client('DEMO')
         self.symbol = symbol
         self.volume = volume
         self.cmd = cmd

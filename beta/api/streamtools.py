@@ -6,6 +6,7 @@ from api.client import Client
 from api.commands import get_historical_candles
 from threading import Thread
 from time import sleep
+from utils.setup_loger import setup_logger
 
 
 class Stream:
@@ -223,6 +224,10 @@ class DataStream():
         self.candle_msg = None
         self.symbols_price = np.empty(shape=[0, 11])
         self.symbols_last_1M = np.empty(shape=[0, 7])
+        self.stream_logger = setup_logger(
+            name=f'[DATASTREAM] {symbol}',
+            log_file='beta\log\data_stream.log', print=True)
+        
 
     def subscribe_prices(self):
         self.api.stream_send({
@@ -237,8 +242,6 @@ class DataStream():
             "symbol": self.symbol})
         
     def read_stream_messages(self):
-        
-        print('reading')
         while self.api.connection_stream == True:
             message = self.api.stream_read()
             if message["command"] == "tickPrices":
@@ -262,9 +265,12 @@ class DataStream():
                 dictor = self.candle_msg["data"]
                 # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
                 for key in ["symbol",'quoteId',"ctmString"]: dictor.pop(key)
-                self.symbols_last_1M = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)              
+                self.symbols_last_1M = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)  
+                self.stream_logger.info(f'{self.symbol} CNADLE: {list(self.symbols_last_1M)}')
+                
             except:
                 sleep(1)
+            
 
     def stream_read(self):
         while self.api.connection_stream == True:
