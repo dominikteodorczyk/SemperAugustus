@@ -93,14 +93,16 @@ class TradingSlot(object):
 
 class Trader(object):
     def __init__(self,symbol) -> None:
-        self.api = Client('DEMO')
         self.symbol = symbol
+        self.buy_model = MovingAVG(symbol=symbol,period=1)
 
     def run(self,symbol_data, risk_data,session_data):
-        while True:
-            # print(f'{self.symbol} PRICE: {symbol_data.symbols_price}')
-            # print(f'{self.symbol} CANDLE: {symbol_data.symbols_last_1M}')
-            sleep(1)
+        buy_model_thread = Thread(
+            target=self.buy_model.run,
+            args=(symbol_data,))
+        
+        buy_model_thread.start()
+        buy_model_thread.join()
 
 
 class Position:
