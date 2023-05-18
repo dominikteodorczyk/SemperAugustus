@@ -28,15 +28,19 @@ class TradingSession(object):
         wallet_thread = Thread(
             target=self.wallet.run, 
             args=())
+        
         session_control_thread = Thread(
             target=self.session_control.run, 
             args=())
+        
         trading_pool_thread = Thread(
             target=self.trading_pool.run_pool, 
             args=(self.wallet, self.session_control))
+
         wallet_thread.start()
         session_control_thread.start()
         trading_pool_thread.start()
+
         wallet_thread.join()
         session_control_thread.join()
         trading_pool_thread.join()
@@ -50,6 +54,7 @@ class TradingPool(object):
     def run_pool(self, risk_data, session_data):
         self.risk_data = risk_data
         self.session_data = session_data
+        
         slots = []
         for symbol in self.symbols:
             thread = Thread(
@@ -57,6 +62,7 @@ class TradingPool(object):
                 args=(self.risk_data, self.session_data))
             thread.start()
             slots.append(thread)
+        
         for slot in slots: slot.join()
 
 
@@ -77,8 +83,10 @@ class TradingSlot(object):
         position_thread = Thread(
             target=Trader(symbol=self.symbol).run, 
             args=(self.symbol_data, risk_data,session_data,))
+
         data_thread.start()
         position_thread.start()
+
         data_thread.join()
         position_thread.join()
 
@@ -92,6 +100,7 @@ class Trader(object):
         buy_model_thread = Thread(
             target=self.buy_model.run,
             args=(symbol_data,))
+        
         buy_model_thread.start()
         buy_model_thread.join()
 

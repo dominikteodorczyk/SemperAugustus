@@ -130,7 +130,7 @@ dmypy.json
 *.txt
 
 #user choice
-beta/docs/*.docx
-beta/docs/*.pdf 
+src/docs/*.docx
+src/docs/*.pdf 
 *.ipynb
-beta/main.py
+src/main.py
