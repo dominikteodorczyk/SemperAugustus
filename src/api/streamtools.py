@@ -266,7 +266,7 @@ class DataStream():
                 # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
                 for key in ["symbol",'quoteId',"ctmString"]: dictor.pop(key)
                 self.symbols_last_1M = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)  
-                self.stream_logger.info(f'{self.symbol} CNADLE: {list(self.symbols_last_1M)}')
+                # self.stream_logger.info(f'{self.symbol} CNADLE: {list(self.symbols_last_1M)}')
                 
             except:
                 sleep(1)
