@@ -31,7 +31,7 @@ class Client:
 
     def __init__(self, mode: str) -> None:
 
-        self.client_logger = setup_logger('client_logger','beta\log\client.log',print=True)
+        self.client_logger = setup_logger('client_logger','src\log\client.log',print=True)
         self.client_logger.info(f'{mode} SESSION OPENED')
 
         if mode == "REAL":

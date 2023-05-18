@@ -6,7 +6,7 @@ from threading import Thread
 
 class DefaultCloseSignal:
     def __init__(self):
-        self.DCS_logger = setup_logger("DCS_logger", "beta\log\DCS_logger.log")
+        self.DCS_logger = setup_logger("DCS_logger", "src\log\DCS_logger.log")
         self.closedata = None
 
     def init(

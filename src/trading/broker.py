@@ -115,7 +115,7 @@ class Position:
         self.cmd = cmd
         self.close_signal = close_signal
         self.position_logger = setup_logger(
-            f"{self.symbol}-{self.cmd}-", "beta\log\position_logger.log"
+            f"{self.symbol}-{self.cmd}-", "src\log\position_logger.log"
         )
 
     def run(self):
