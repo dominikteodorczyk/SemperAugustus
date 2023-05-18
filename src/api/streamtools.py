@@ -56,7 +56,7 @@ class WalletStream:
 class PositionObservator:
     def __init__(self, api=None, symbol=None, order_no=None) -> None:
         self.obs_logger = setup_logger(
-            f"{symbol}-{order_no}", "beta\log\obs_logger.log",print=True
+            f"{symbol}-{order_no}", "src\log\obs_logger.log",print=True
         )
         self.api = api
         self.symbol = symbol
@@ -226,7 +226,7 @@ class DataStream():
         self.symbols_last_1M = np.empty(shape=[0, 7])
         self.stream_logger = setup_logger(
             name=f'[DATASTREAM] {symbol}',
-            log_file='beta\log\data_stream.log', print=True)
+            log_file='src\log\data_stream.log', print=True)
         
 
     def subscribe_prices(self):
