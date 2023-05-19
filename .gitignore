@@ -134,3 +134,4 @@ src/docs/*.docx
 src/docs/*.pdf 
 *.ipynb
 src/main.py
+.vscode
