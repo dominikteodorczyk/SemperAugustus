@@ -1,1 +1,1 @@
-![Frame 4](https://user-images.githubusercontent.com/98852704/224168693-2975c5fa-df9d-4948-85d7-c83daf0db79c.png)
+<img width="595" alt="A4 - 9" src="https://github.com/dominikteodorczyk/SemperAugustus/assets/98852704/c99cea88-5d1b-42b1-a8b0-3f49b4c5f704">
