@@ -106,16 +106,7 @@ class Trader(object):
                 close_signal=DefaultCloseSignal(),
             )
 
-            position_result = position.run()
-
-            if position_result < 0 and cmd == 1:
-                cmd = 0
-            elif position_result < 0 and cmd == 0:
-                cmd = 1
-            else:
-                pass
-
-            sleep(1)
+            position.run()
 
 
     def run(self,symbol_data, risk_data,session_data):
@@ -175,7 +166,8 @@ class Position:
             f'{self.order["order_no"]} CLOSED WITH PROFIT: {profit}'
         )
         self.api.close_session()
-        return profit
+        self.position_logger(f'PROFIT:{profit}')
+
 
     # TODO: całość powyższa powinna odbywać się w close signal i to
     # on powinien wykonywać operacje zamknięcia pozycji wraz z jej monitoringiem,
@@ -206,13 +198,6 @@ def position():
         )
 
         position_result = position.run()
-        if position_result < 0 and cmd == 1:
-            cmd = 0
-        elif position_result < 0 and cmd == 0:
-            cmd = 1
-        else:
-            pass
 
-        sleep(2)
 
     api.close_session()
