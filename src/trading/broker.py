@@ -96,48 +96,85 @@ class Trader(object):
         self.symbol = symbol
         self.buy_model = MovingAVG(symbol=symbol,period=1)
 
+    def open_position(self):
+        while True:
+            print(f"Pozycja: {self.buy_model.signal}")
+            position = Position(
+                cmd=self.buy_model.signal,
+                symbol=self.symbol,
+                volume=0.01,
+                close_signal=DefaultCloseSignal(),
+            )
+
+            position_result = position.run()
+
+            if position_result < 0 and cmd == 1:
+                cmd = 0
+            elif position_result < 0 and cmd == 0:
+                cmd = 1
+            else:
+                pass
+
+            sleep(1)
+
+
     def run(self,symbol_data, risk_data,session_data):
         buy_model_thread = Thread(
             target=self.buy_model.run,
             args=(symbol_data,))
         
+        position_thread = Thread(
+            target=self.open_position,
+            args=())
         buy_model_thread.start()
+
+        while True:
+            if self.buy_model.signal == None:
+                sleep(1)
+                pass
+            else:
+                break
+
+        position_thread.start()
         buy_model_thread.join()
+        position_thread.join()
 
 
 class Position:
     def __init__(
-        self, api, cmd, symbol: str, volume: float, close_signal: object = None
+        self, cmd, symbol: str, volume: float, close_signal: object = None
     ):
         self.api = Client('DEMO')
+        self.cmd = cmd
         self.symbol = symbol
         self.volume = volume
-        self.cmd = cmd
         self.close_signal = close_signal
         self.position_logger = setup_logger(
             f"{self.symbol}-{self.cmd}-", "src\log\position_logger.log"
         )
 
     def run(self):
+        self.api.open_session()
         if self.cmd == 0:
             self.order = buy_transaction(
                 api=self.api, symbol=self.symbol, volume=self.volume
             )
             self.position_logger.info(f'{self.order["order_no"]} OPENED')
-            self.close_signal.init(api=self.api, position_data=self.order)
+            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 0.5)
             self.close_signal.run()
         if self.cmd == 1:
             self.order = sell_transaction(
                 api=self.api, symbol=self.symbol, volume=self.volume
             )
             self.position_logger.info(f'{self.order["order_no"]} OPENED')
-            self.close_signal.init(api=self.api, position_data=self.order)
+            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 0.5)
             self.close_signal.run()
 
         profit = self.close_signal.closedata["profit"]
         self.position_logger.info(
             f'{self.order["order_no"]} CLOSED WITH PROFIT: {profit}'
         )
+        self.api.close_session()
         return profit
 
     # TODO: całość powyższa powinna odbywać się w close signal i to
