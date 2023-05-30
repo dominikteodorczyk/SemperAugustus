@@ -382,6 +382,8 @@ class DefaultCloseSignal:
             if current_percentage <= 0:
 
                 if current_percentage > (-1 * self.sl_start):
+                    self.DCS_logger.info(f'{current_percentage} > {(-1 * self.sl_start)}')
+                    sleep(1)
                     pass
                 else:
                     self.closedata = close_position(

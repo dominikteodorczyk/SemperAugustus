@@ -127,10 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-*.txt
+src/*.txt
 
 #user choice
 src/docs/*.docx
 src/docs/*.pdf 
 *.ipynb
 src/main.py
+.vscode
