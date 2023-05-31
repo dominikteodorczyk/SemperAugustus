@@ -98,7 +98,6 @@ class Trader(object):
 
     def open_position(self):
         while True:
-            print(f"Pozycja: {self.buy_model.signal}")
             position = Position(
                 cmd=self.buy_model.signal,
                 symbol=self.symbol,
@@ -150,15 +149,13 @@ class Position:
             self.order = buy_transaction(
                 api=self.api, symbol=self.symbol, volume=self.volume
             )
-            self.position_logger.info(f'{self.order["order_no"]} OPENED')
-            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 0.5)
+            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 1.5)
             self.close_signal.run()
         if self.cmd == 1:
             self.order = sell_transaction(
                 api=self.api, symbol=self.symbol, volume=self.volume
             )
-            self.position_logger.info(f'{self.order["order_no"]} OPENED')
-            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 0.5)
+            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 1.5)
             self.close_signal.run()
 
         profit = self.close_signal.closedata["profit"]
@@ -166,7 +163,7 @@ class Position:
             f'{self.order["order_no"]} CLOSED WITH PROFIT: {profit}'
         )
         self.api.close_session()
-        self.position_logger(f'PROFIT:{profit}')
+
 
 
     # TODO: całość powyższa powinna odbywać się w close signal i to
@@ -176,28 +173,3 @@ class Position:
     # TODO: clasa powinna zwracac profit zakończonej transackji jej numery, długośc
     # raz wykorzystane modele do zawarcia transacki oraz zakończenia
 
-
-
-
-
-def position():
-    api = Client("DEMO")
-    api.open_session()
-    model = MovingAVG(api=api, symbol="BITCOIN", period=1)
-    model.run()
-    sleep(5)
-    while api.connection_stream == True:
-        cmd = model.signal
-        print(f"Pozycja: {cmd}")
-        position = Position(
-            api=api,
-            cmd=cmd,
-            symbol="BITCOIN",
-            volume=0.01,
-            close_signal=DefaultCloseSignal(),
-        )
-
-        position_result = position.run()
-
-
-    api.close_session()

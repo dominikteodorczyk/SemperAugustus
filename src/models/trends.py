@@ -45,13 +45,10 @@ class MovingAVG():
                 self.base_data = self.base_data[-60:, :]
                 try:
                     self.get_means()
-                    print(f'{self.symbol}: {self.mean}')
-                    if self.mean[1] > self.mean[3]:
+                    if self.mean[4] > self.mean[3]:
                         self.signal = 0
-                    if self.mean[1] < self.mean[3]:
+                    if self.mean[4] < self.mean[3]:
                         self.signal = 1
-
-                    print(f'{self.symbol} signal: {self.signal}')
                 except:
                     pass
             sleep(1)
