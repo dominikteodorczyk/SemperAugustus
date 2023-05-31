@@ -83,14 +83,14 @@ class PositionObservator:
             {
                 "command": "getCandles",
                 "streamSessionId": self.api.stream_sesion_id,
-                "symbol": "EURUSD",
+                "symbol": self.symbol,
             }
         )
         self.api.stream_send(
             {
                 "command": "getTickPrices",
                 "streamSessionId": self.api.stream_sesion_id,
-                "symbol": "EURUSD",
+                "symbol": self.symbol,
             }
         )
         self.api.stream_send(
@@ -183,7 +183,7 @@ class AssetObservator():
             {
                 "command": "getCandles",
                 "streamSessionId": self.api.stream_sesion_id,
-                "symbol": "EURUSD",
+                "symbol": self.symbol,
             }
         )
 

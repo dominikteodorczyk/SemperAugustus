@@ -318,7 +318,7 @@ class DefaultCloseSignal:
             self.closedata = close_position(
                 api=self.api,symbol=self.symbol,position=self.position,
                 volume=self.volume,cmd=self.cmd,)
-            self.DCS_logger.info(f'Current: {current_price}, Mean {mean_candle_value}')
+
             self.status_to_close = True
 
     def calculate_easy_sell_cs(self, candle, current_price):
@@ -330,7 +330,7 @@ class DefaultCloseSignal:
             self.closedata = close_position(
                 api=self.api,symbol=self.symbol,position=self.position,
                 volume=self.volume,cmd=self.cmd,)
-            self.DCS_logger.info(f'Current: {current_price}, Mean {mean_candle_value}')
+
             self.status_to_close = True
 
 
@@ -339,7 +339,6 @@ class DefaultCloseSignal:
         try:
             current_price = self.price_data.curent_price[0, self.as_bid_position]
             current_percentage = self.get_current_percentage()
-
             if current_percentage <= 0:
 
                 if current_percentage > (-1 * self.sl_start):
@@ -378,12 +377,11 @@ class DefaultCloseSignal:
         try:
             current_price = self.price_data.curent_price[0, self.as_bid_position]
             current_percentage = self.get_current_percentage()
-
+            
             if current_percentage <= 0:
 
                 if current_percentage > (-1 * self.sl_start):
-                    self.DCS_logger.info(f'{current_percentage} > {(-1 * self.sl_start)}')
-                    sleep(1)
+                    sleep(0.1)
                     pass
                 else:
                     self.closedata = close_position(
