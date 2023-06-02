@@ -48,4 +48,4 @@ BOSSA_SERWER_DEMO = "BossaFX-Demo"  # BOSSA DEMO account server
 ################################
 
 # Paths for log
-LOG_PATH = "/path/to/"  # Path for the log files
+DEF_LOG_PATH = "/path/to/"  # Path for the log files
