@@ -82,4 +82,5 @@ class LoggerPaths():
         log_path (str): The path for the log files.
     """
     def __init__(self) -> None:
-        self.log_path = getenv('LOG_PATH')
+        load_dotenv(verbose=True)
+        self.log_path = getenv('DEF_LOG_PATH')
