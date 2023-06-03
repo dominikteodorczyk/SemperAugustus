@@ -3,8 +3,8 @@ Check the Client of XTB API is valid.
 """
 
 import pytest
-from client import *
-from streamtools import *
+from src.api.client import *
+from src.api.streamtools import *
 
 
 class Test_WalletStream:
