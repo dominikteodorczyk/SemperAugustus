@@ -1,12 +1,12 @@
-from api.client import Client
-from api.streamtools import AssetObservator
+from src.api.client import Client
+from src.api.streamtools import AssetObservator
 import numpy as np
 import psutil
 import matplotlib.pyplot as plt
 from threading import Thread
 from time import sleep
 from matplotlib.animation import FuncAnimation
-from api.commands import get_historical_candles
+from src.api.commands import get_historical_candles
 
 
 class MovingAVG():

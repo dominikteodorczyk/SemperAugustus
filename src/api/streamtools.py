@@ -1,17 +1,10 @@
-import json
 import numpy as np
-from time import time
-from utils.setup_loger import setup_logger
-from api.client import Client
-from api.commands import get_historical_candles
+from src.utils.setup_loger import setup_logger
+from src.api.client import Client
+from src.api.commands import get_historical_candles
 from threading import Thread
 from time import sleep
-from utils.setup_loger import setup_logger
-
-
-class Stream:
-    def __init__(self) -> None:
-        pass
+from src.utils.setup_loger import setup_logger
 
 
 class WalletStream:
@@ -40,8 +33,7 @@ class WalletStream:
         try:
             if message["command"] == "balance":
                 self.balance = np.fromiter(
-                    message["data"].values(), dtype=float
-                )
+                    message["data"].values(), dtype=float)
         except:
             pass
 
@@ -49,14 +41,14 @@ class WalletStream:
         self.subscribe()
         while self.api.connection_stream == True:
             self.streamread()
-    
+
     #    self.keepalive()
 
 
 class PositionObservator:
     def __init__(self, api=None, symbol=None, order_no=None) -> None:
         self.obs_logger = setup_logger(
-            f"{symbol}-{order_no}", "src\log\obs_logger.log",print=True
+            f"{symbol}-{order_no}", log_file_name="obs_logger.log", print_logs=True
         )
         self.api = api
         self.symbol = symbol
@@ -108,24 +100,25 @@ class PositionObservator:
             if dictor["symbol"] == self.symbol:
                 dictor.pop("symbol")
                 self.curent_price = np.fromiter(
-                    dictor.values(), dtype=float
-                ).reshape(1, 11)
-                #self.obs_logger.info(f"PIRICE: {self.curent_price}")
+                    dictor.values(), dtype=float).reshape(
+                    1, 11
+                )
+                # self.obs_logger.info(f"PIRICE: {self.curent_price}")
         if message["command"] == "profit":
             dictor = message["data"]
             if dictor["order2"] == self.order_no:
                 self.profit = dictor["profit"]
-                #self.obs_logger.info(f"PROFIT: {self.profit}")
+                # self.obs_logger.info(f"PROFIT: {self.profit}")
         if message["command"] == "candle":
             dictor = message["data"]
             # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
             if dictor["symbol"] == self.symbol:
                 dictor.pop("ctmString")
                 dictor.pop("symbol")
-                self.minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(
-                    1, 7
-                )
-                self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
+                self.minute_1 = np.fromiter(
+                    dictor.values(), dtype=float).reshape(1, 7)
+                self.minute_1_5box = np.vstack(
+                    [self.minute_1_5box, self.minute_1])
 
     def make_more_candles(self):
         if np.shape(self.minute_1_5box)[0] == 5:
@@ -144,8 +137,7 @@ class PositionObservator:
             )
             self.minute_1_5box = np.empty(shape=[0, 7])
             self.minute_5_15box = np.vstack(
-                [self.minute_5_15box, self.minute_5]
-            )
+                [self.minute_5_15box, self.minute_5])
 
         if np.shape(self.minute_5_15box)[0] == 3:
             self.minute_15 = np.array(
@@ -164,18 +156,18 @@ class PositionObservator:
             self.minute_5_15box = np.empty(shape=[0, 7])
 
     def stream(self):
-        #self.subscribe()
-        #while self.api.connection_stream == True:
         self.streamread()
         self.make_more_candles()
 
-class AssetObservator():
 
-    def __init__(self, api:Client, symbol:str, period=1) -> None:
+class AssetObservator:
+    def __init__(self, api: Client, symbol: str, period=1) -> None:
         self.api = api
         self.symbol = symbol
-        self.shift = 60 #parametr ustawiony na sztywno
-        self.base_data = get_historical_candles(api=api,symbol=self.symbol, shift=60, period=period)
+        self.shift = 60
+        self.base_data = get_historical_candles(
+            api=api, symbol=self.symbol, shift=60, period=period
+        )
         self.minute_1 = None
 
     def subscribe(self):
@@ -195,14 +187,11 @@ class AssetObservator():
             if dictor["symbol"] == self.symbol:
                 dictor.pop("ctmString")
                 dictor.pop("symbol")
-                dictor.pop('quoteId')
-                minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(
-                    1, 6
-                )
+                dictor.pop("quoteId")
+                minute_1 = np.fromiter(
+                    dictor.values(), dtype=float).reshape(1, 6)
                 self.base_data = np.vstack([self.base_data, minute_1])
-                self.base_data = self.base_data[-self.shift:, :]
-
-
+                self.base_data = self.base_data[-self.shift :, :]
 
     def stream(self):
         self.subscribe()
@@ -210,14 +199,9 @@ class AssetObservator():
             self.streamread()
 
 
-
-
-
-
-class DataStream():
-
-    def __init__(self, symbol:str = None):
-        self.api = Client('DEMO')
+class DataStream:
+    def __init__(self, symbol: str = None):
+        self.api = Client("DEMO")
         self.symbol = symbol
         self.server_time = None
         self.tick_msg = None
@@ -225,22 +209,28 @@ class DataStream():
         self.symbols_price = np.empty(shape=[0, 11])
         self.symbols_last_1M = np.empty(shape=[0, 7])
         self.stream_logger = setup_logger(
-            name=f'[DATASTREAM] {symbol}',
-            log_file='src\log\data_stream.log', print=True)
-        
+            name=f"[DATASTREAM] {symbol}",
+            log_file_name="data_stream.log",
+            print_logs=True)
 
     def subscribe_prices(self):
-        self.api.stream_send({
-            "command": "getTickPrices",
-            "streamSessionId": self.api.stream_sesion_id,
-            "symbol": self.symbol})
+        self.api.stream_send(
+            {
+                "command": "getTickPrices",
+                "streamSessionId": self.api.stream_sesion_id,
+                "symbol": self.symbol,
+            }
+        )
 
     def subscribe_candles(self):
-        self.api.stream_send({
-            "command": "getCandles",
-            "streamSessionId": self.api.stream_sesion_id,
-            "symbol": self.symbol})
-        
+        self.api.stream_send(
+            {
+                "command": "getCandles",
+                "streamSessionId": self.api.stream_sesion_id,
+                "symbol": self.symbol,
+            }
+        )
+
     def read_stream_messages(self):
         while self.api.connection_stream == True:
             message = self.api.stream_read()
@@ -255,27 +245,29 @@ class DataStream():
                 dictor = self.tick_msg["data"]
                 # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
                 dictor.pop("symbol")
-                self.symbols_price = np.fromiter(dictor.values(), dtype=float).reshape(1, 11)
+                self.symbols_price = np.fromiter(
+                    dictor.values(), 
+                    dtype=float).reshape(1, 11)
             except:
                 sleep(0.5)
-    
+
     def read_last_1M(self):
         while self.api.connection_stream == True:
             try:
                 dictor = self.candle_msg["data"]
                 # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
-                for key in ["symbol",'quoteId',"ctmString"]: dictor.pop(key)
-                self.symbols_last_1M = np.fromiter(dictor.values(), dtype=float).reshape(1, 6)  
-                # self.stream_logger.info(f'{self.symbol} CNADLE: {list(self.symbols_last_1M)}')
-                
+                for key in ["symbol", "quoteId", "ctmString"]:
+                    dictor.pop(key)
+                self.symbols_last_1M = np.fromiter(
+                    dictor.values(), dtype=float
+                ).reshape(1, 6)
+
             except:
                 sleep(1)
-            
 
     def stream_read(self):
         while self.api.connection_stream == True:
             self.read_stream_messages()
-            
 
     def run(self):
         self.api.open_session()
@@ -292,7 +284,7 @@ class DataStream():
                 pass
             else:
                 break
-        print('started')
+        print("started")
         thread_prices.start()
         thread_candles.start()
 
@@ -301,6 +293,3 @@ class DataStream():
         thread_candles.join()
 
         self.api.close_session()
-
-            
-

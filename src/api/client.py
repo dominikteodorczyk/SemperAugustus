@@ -1,11 +1,11 @@
 import json
-from api.settings import *
+from settings import UserDEMO, UserREAL
 from time import sleep
 import socket
 import ssl
 from threading import Thread
 import sys
-from utils.setup_loger import setup_logger
+from src.utils.setup_loger import setup_logger
 
 class Client:
     """
@@ -31,8 +31,8 @@ class Client:
 
     def __init__(self, mode: str) -> None:
 
-        self.client_logger = setup_logger('client_logger','src\log\client.log',print=True)
-        # self.client_logger.info(f'{mode} SESSION OPENED')
+        self.client_logger = setup_logger('client_logger','client.log',print_logs=False)
+        self.client_logger.info(f'{mode} SESSION OPENED')
 
         if mode == "REAL":
             self.user = UserREAL()
@@ -66,7 +66,7 @@ class Client:
             self.socket_connection.connect(
                 (self.user.host, self.user.main_port)
             )
-            # self.client_logger.info(f"Connected successfully to {self.user.host}")
+            self.client_logger.info(f"Connected successfully to {self.user.host}")
             self.connection = True
         except Exception as e:
             self.client_logger.error(f"Not connected to {self.user.host}, {e}")
@@ -81,9 +81,9 @@ class Client:
             self.socket_stream_connection.connect(
                 (self.user.host, self.user.streaming_port)
             )
-            # self.client_logger.info(
-            #     f"Connected successfully to streaming port on {self.user.host}"
-            # )
+            self.client_logger.info(
+                f"Connected successfully to streaming port on {self.user.host}"
+            )
             self.connection_stream = True
         except Exception as e:
             self.client_logger.error(
@@ -98,7 +98,7 @@ class Client:
         """
         try:
             self.socket_connection.close()
-            # self.client_logger.info(f"Disconnected successfully from {self.user.host}")
+            self.client_logger.info(f"Disconnected successfully from {self.user.host}")
             self.connection = False
         except:
             self.client_logger.error(f"Not disconnected from {self.user.host}")
@@ -110,9 +110,9 @@ class Client:
         """
         try:
             self.socket_stream_connection.close()
-            # self.client_logger.info(
-            #     f"Disconnected successfully stream from {self.user.host}"
-            # )
+            self.client_logger.info(
+                f"Disconnected successfully stream from {self.user.host}"
+            )
             self.connection_stream = False
         except Exception as e:
             self.client_logger.error(f"Not disconnected stream from {self.user.host}")
@@ -146,7 +146,7 @@ class Client:
                     received_data = received_data[size:].strip()
                     break
             except Exception as e:
-                # self.client_logger.warning(f"Error sending {command_type}: {e}")
+                self.client_logger.warning(f"Error sending {command_type}: {e}")
                 continue
         return response
 
@@ -178,7 +178,7 @@ class Client:
                     received_data = received_data[size:].strip()
                     break
             except Exception as e:
-                # self.client_logger.warning(f"Reciving error: {e}")
+                self.client_logger.warning(f"Reciving error: {e}")
                 continue
         return response
         
@@ -202,9 +202,9 @@ class Client:
         if str(result["status"]) == "True":
             self.login_status = result["status"]
             self.stream_sesion_id = result["streamSessionId"]
-            # self.client_logger.info(
-            #     f'Logged as {self.user.login} (stream session id: {result["streamSessionId"]})'
-            # )
+            self.client_logger.info(
+                f'Logged as {self.user.login} (stream session id: {result["streamSessionId"]})'
+            )
         else:
             self.login_status = False
             self.client_logger.error(f"Not logged")
@@ -216,7 +216,7 @@ class Client:
         packet = {"command": "logout"}
         result = self.send_n_return(packet)
         if str(result["status"]) == "True":
-            # self.client_logger.info(f"Logged out of {self.user.login}")
+            self.client_logger.info(f"Logged out of {self.user.login}")
             self.login_status = False
         else:
             self.client_logger.error(f"Not logged out")
@@ -242,7 +242,6 @@ class Client:
                     sleep(10)
             self.login()
         except:
-            # print(f'Session interrupted, unable to connect.')
             self.client_logger.warning(f"Session interrupted, unable to connect.")
             sys.exit(0)
 

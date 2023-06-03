@@ -3,7 +3,7 @@ Check the Client of XTB API is valid.
 """
 
 import pytest
-from client import *
+from src.api.client import *
 from settings import UserDEMO
 import ssl
 import numpy as np

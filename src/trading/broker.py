@@ -1,17 +1,15 @@
-from api.client import Client
-from api.commands import buy_transaction, sell_transaction
+from src.api.client import Client
+from src.api.commands import buy_transaction, sell_transaction
 from threading import Thread
-from models.close_signals import *
-from models.trends import MovingAVG
+from src.models.close_signals import *
+from src.models.trends import MovingAVG
 from time import sleep
-from utils.setup_loger import setup_logger
-from utils.wallet import Wallet
-from utils.technical_utils import SessionTechnicalController
-import logging
+from src.utils.setup_loger import setup_logger
+from src.utils.wallet import Wallet
+from src.utils.technical_utils import SessionTechnicalController
 
 
 class TradingSession(object):
-
     def __init__(self, symbols:list = None) -> None:
         self.symbols = symbols
         # init object with risk data and portfolio management
@@ -45,7 +43,7 @@ class TradingSession(object):
         session_control_thread.join()
         trading_pool_thread.join()
 
-#TODO: moduł testowany na końcu
+
 class TradingPool(object):
 
     def __init__(self, symbols) -> None:
@@ -140,7 +138,7 @@ class Position:
         self.volume = volume
         self.close_signal = close_signal
         self.position_logger = setup_logger(
-            f"{self.symbol}-{self.cmd}-", "src\log\position_logger.log"
+            f"{self.symbol}-{self.cmd}-", "position_logger.log"
         )
 
     def run(self):
@@ -149,13 +147,13 @@ class Position:
             self.order = buy_transaction(
                 api=self.api, symbol=self.symbol, volume=self.volume
             )
-            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 1.5)
+            self.close_signal.set_params(api=self.api, position_data=self.order, sl_start= 1.5)
             self.close_signal.run()
         if self.cmd == 1:
             self.order = sell_transaction(
                 api=self.api, symbol=self.symbol, volume=self.volume
             )
-            self.close_signal.init(api=self.api, position_data=self.order, sl_start= 1.5)
+            self.close_signal.set_params(api=self.api, position_data=self.order, sl_start= 1.5)
             self.close_signal.run()
 
         profit = self.close_signal.closedata["profit"]
@@ -163,13 +161,3 @@ class Position:
             f'{self.order["order_no"]} CLOSED WITH PROFIT: {profit}'
         )
         self.api.close_session()
-
-
-
-    # TODO: całość powyższa powinna odbywać się w close signal i to
-    # on powinien wykonywać operacje zamknięcia pozycji wraz z jej monitoringiem,
-    # w ten sposob uniknie się komplikacji kody i wielokrotnego przekazywania zmienny
-
-    # TODO: clasa powinna zwracac profit zakończonej transackji jej numery, długośc
-    # raz wykorzystane modele do zawarcia transacki oraz zakończenia
-
