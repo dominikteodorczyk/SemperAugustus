@@ -1,3 +1,15 @@
+"""
+Main file of the program.
+This is where the source code is located, which runs the program 
+and controls its flow.
+
+In the current version of the application, the main file calls 
+the trading sessions on the defined assets (possibly all available 
+in the XTB offer: 
+https://www.xtb.com/en/trading-services/account-information/market-specification#forex
+"""
+
+
 from src.trading.broker import TradingSession
 
 def main():
