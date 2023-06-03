@@ -9,8 +9,9 @@ in the XTB offer:
 https://www.xtb.com/en/trading-services/account-information/market-specification#forex
 """
 
-
 from src.trading.broker import TradingSession
+
+
 
 def main():
     # List of trading instruments to include in the session
