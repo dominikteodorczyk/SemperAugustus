@@ -1,5 +1,5 @@
 """
-The module includes a tool to generate a personalized logging tool
+The module includes a technical tools
 """
 
 import os
