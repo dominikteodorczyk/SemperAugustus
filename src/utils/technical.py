@@ -21,7 +21,6 @@ def setup_logger(
 
     Returns:
         logging.Logger: Configured logger object.
-
     """
 
     log_path = os.path.join(LoggerPaths().log_path, log_file_name)

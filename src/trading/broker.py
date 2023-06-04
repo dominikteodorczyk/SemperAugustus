@@ -11,7 +11,7 @@ from src.models.close_signals import *
 from src.models.trends import *
 from src.utils.technical import setup_logger
 from src.utils.wallet import Wallet
-from src.utils.controlling import SessionTechnicalController
+from src.utils.controlling import AssetTechnicalController
 
 
 
@@ -36,7 +36,7 @@ class TradingSession():
     def __init__(self, symbols: list) -> None:
         self.symbols = symbols
         self.wallet = Wallet()
-        self.session_control = SessionTechnicalController(symbols=symbols)
+        self.session_control = AssetTechnicalController(symbols=symbols)
         self.trading_pool = TradingPool(symbols=symbols)
 
     def session_init(self):

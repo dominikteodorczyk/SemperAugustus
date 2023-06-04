@@ -2,6 +2,8 @@
 Module that controls the session and technical parameters of the value.
 """
 
+
+
 class AssetTechnicalController():
     """
     Manages the technical aspects of a trading session. The facility monitors
