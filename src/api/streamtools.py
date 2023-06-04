@@ -1,10 +1,10 @@
 import numpy as np
-from src.utils.setup_loger import setup_logger
+from src.utils.technical import setup_logger
 from src.api.client import Client
 from src.api.commands import get_historical_candles
 from threading import Thread
 from time import sleep
-from src.utils.setup_loger import setup_logger
+from src.utils.technical import setup_logger
 
 
 class WalletStream:
@@ -246,7 +246,7 @@ class DataStream:
                 # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
                 dictor.pop("symbol")
                 self.symbols_price = np.fromiter(
-                    dictor.values(), 
+                    dictor.values(),
                     dtype=float).reshape(1, 11)
             except:
                 sleep(0.5)

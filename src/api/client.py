@@ -5,7 +5,7 @@ import socket
 import ssl
 from threading import Thread
 import sys
-from src.utils.setup_loger import setup_logger
+from src.utils.technical import setup_logger
 
 class Client:
     """
@@ -163,7 +163,7 @@ class Client:
         return self.socket_stream_connection.send(
             json.dumps(message).encode("utf-8")
         )
-    
+
     def stream_read(self):
         received_data = ""
         while True:
@@ -181,7 +181,7 @@ class Client:
                 self.client_logger.warning(f"Reciving error: {e}")
                 continue
         return response
-        
+
 
     def login(self):
         """

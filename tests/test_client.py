@@ -14,14 +14,14 @@ class Test_Client():
 
 
     def test_Class_demo_atributes(self):
-        # collective test of the set of attributes of the created object connecting to the api of the client class 
+        # collective test of the set of attributes of the created object connecting to the api of the client class
         APIobject = Client('DEMO')
 
         # test loading the appropriate classe of user parameters from the settings class
         assert APIobject.user.__class__ is UserDEMO
 
         # set of parameters which, after defining an instance of the client class, should have the value none
-        assert APIobject.login_status is None 
+        assert APIobject.login_status is None
         assert APIobject.stream_sesion_id is None
         assert APIobject.connection is None
         assert APIobject.connection_stream is None
@@ -32,20 +32,20 @@ class Test_Client():
 
 
     def test_Client_method_connect_is_making_connection(self):
-        # A test to see if there is a valid connection to the appropriate main port and if there are 
+        # A test to see if there is a valid connection to the appropriate main port and if there are
         # changes to the connection confirmation attribute
         APIobject = Client('DEMO')
 
         APIobject.connect()
         connection = True
         peer_port = UserDEMO().main_port
-        
+
         assert APIobject.socket_connection.getpeername()[1] == peer_port
         assert APIobject.connection is connection
 
 
     def test_Client_method_disconnect_is_making_disconnection(self):
-        # A test to see if there is a valid stream connection to the appropriate main port and if there are 
+        # A test to see if there is a valid stream connection to the appropriate main port and if there are
         # changes to the stream connection confirmation attribute
         APIobject = Client('DEMO')
         APIobject.connect()
@@ -78,7 +78,7 @@ class Test_Client():
 
         try:
             recv = APIobject.send_n_return(simple_command)
-            recv_status = recv['status'] 
+            recv_status = recv['status']
         except:
             recv_status == False
 
@@ -89,7 +89,7 @@ class Test_Client():
         # login status read from server response should be True
         assert APIobject.login_status is True
 
-        # The server's response to the version query is a dictionary with the API version 
+        # The server's response to the version query is a dictionary with the API version
         # and status which should be True
         assert recv_status is True
 
@@ -107,7 +107,7 @@ class Test_Client():
 
         try:
             recv = APIobject.send_n_return(simple_command)
-            recv_status = recv['status'] 
+            recv_status = recv['status']
         except:
             recv_status == False
         # reading the value of object parameters after logging in
@@ -117,7 +117,7 @@ class Test_Client():
         APIobject.logout()
         try:
             recv = APIobject.send_n_return(simple_command)
-            recv_status_after_logout = recv['status'] 
+            recv_status_after_logout = recv['status']
         except:
             recv_status_after_logout = False
         status_after_logout = APIobject.login_status
@@ -145,8 +145,8 @@ class Test_Decorators():
             print(recv)
             recv_status = recv['status']
             return recv_status, api
-        
-        
+
+
         #function_returns is a tulpe of result and used api object
         function_returns, args, kwargs = simple_function(command = simple_command)
         print(function_returns, args, kwargs)
@@ -154,7 +154,7 @@ class Test_Decorators():
         assert function_returns[0] is True # return status message sent by the server, should be true
         assert type(function_returns[1]) is Client # api should be an object of class client (passed to function from wrapper
         assert args is () # for 'command = simple_command' the args command is empty
-        assert kwargs['command'] == simple_command # used inside the decorator comenda should be consistent with the declared 
+        assert kwargs['command'] == simple_command # used inside the decorator comenda should be consistent with the declared
 
 
     def test_Decorator_stream_session_simulator(self):
@@ -165,7 +165,7 @@ class Test_Decorators():
 
         # defining the execution time of the data stream
         time_run = 10
-        
+
         # definition of a class that creates and reads a stream of data on a portfolio
         @stream_session_simulator(time_run)
         class SimpleTestStream():
@@ -176,7 +176,7 @@ class Test_Decorators():
 
             def subscribe(self):
                 return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})
-            
+
             def streamread(self):
                 message = json.loads(self.api.socket_stream_connection.recv())
                 try:
@@ -190,13 +190,13 @@ class Test_Decorators():
                 while self.api.connection_stream == True:
                     self.streamread()
 
-        # measurement of the start of the stream object creation and termination            
+        # measurement of the start of the stream object creation and termination
         start_runing = monotonic_ns()
         returned = SimpleTestStream()
         time_of_runing_code = monotonic_ns() - start_runing
 
         # reading the data passed from the stream session simulator decorator
-        balance = returned[0]['balance'] # portfolio data 
+        balance = returned[0]['balance'] # portfolio data
         api = returned[0]['api'] # api class
 
         assert np.shape(balance) == (10,) # portfolio data should be of numpy matrix dimension 10x

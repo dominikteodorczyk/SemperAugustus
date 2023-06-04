@@ -9,7 +9,7 @@ from src.api.client import Client
 from src.api.commands import buy_transaction, sell_transaction
 from src.models.close_signals import *
 from src.models.trends import *
-from src.utils.setup_loger import setup_logger
+from src.utils.technical import setup_logger
 from src.utils.wallet import Wallet
 from src.utils.controlling import SessionTechnicalController
 

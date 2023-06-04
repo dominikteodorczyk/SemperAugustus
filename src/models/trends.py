@@ -21,7 +21,7 @@ class MovingAVG():
         self.last_1M_candle = np.empty(shape=[1, 6])
         self.signal = None
 
-    
+
     def get_means(self):
         avg_60_min = np.mean(self.base_data[-60, 2])
         avg_15_min = np.mean(self.base_data[-15, 2])
@@ -53,7 +53,7 @@ class MovingAVG():
                     pass
             sleep(1)
 
-                
+
     def run(self, symbol_data):
         self.api.open_session()
         self.base_data = get_historical_candles(api=self.api,symbol=self.symbol, shift=60, period=self.period)
