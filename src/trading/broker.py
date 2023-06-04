@@ -11,7 +11,7 @@ from src.models.close_signals import *
 from src.models.trends import *
 from src.utils.setup_loger import setup_logger
 from src.utils.wallet import Wallet
-from src.utils.technical_utils import SessionTechnicalController
+from src.utils.controlling import SessionTechnicalController
 
 
 

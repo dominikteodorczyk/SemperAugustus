@@ -1,10 +1,9 @@
-from time import sleep
-import logging
+
 
 class SessionTechnicalController():
     #TODO: zauważalny jest problem niepoprwnosci dziaalnia sesji po 23
-    # dobrze było by monitorować co się dzieje i gdy zbyt dużo transakji 
-    # jest zamykanych od razu przy zerowym odzewie serwera to zawiesić 
+    # dobrze było by monitorować co się dzieje i gdy zbyt dużo transakji
+    # jest zamykanych od razu przy zerowym odzewie serwera to zawiesić
     # dany slot transakcyjny (symbol)
     def __init__(self, symbols) -> None:
         self.symbols = symbols
