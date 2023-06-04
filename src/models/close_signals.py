@@ -1,6 +1,6 @@
 from src.api.streamtools import *
 from src.api.commands import *
-from src.utils.setup_loger import setup_logger
+from src.utils.technical import setup_logger
 from threading import Thread
 
 
@@ -79,18 +79,18 @@ class DefaultCloseSignal:
         if self.cmd == 0:
             while self.status_to_close == False:
                 self.buy_take_profit_signal()
-                sleep(0.001)   
+                sleep(0.001)
         if self.cmd == 1:
             while self.status_to_close == False:
                 self.sell_take_profit_signal()
-                sleep(0.001)             
+                sleep(0.001)
 
 
 
     def calculate_easy_buy_cs(self, candle, current_price):
         mean_candle_value = self.get_candle_mean(candle)
-        
-        
+
+
         if current_price > mean_candle_value:
             pass
         else:
@@ -102,7 +102,7 @@ class DefaultCloseSignal:
 
     def calculate_easy_sell_cs(self, candle, current_price):
         mean_candle_value = self.get_candle_mean(candle)
-        
+
         if current_price < mean_candle_value:
             pass
         else:
@@ -147,13 +147,13 @@ class DefaultCloseSignal:
 
         except:
             pass
-        
+
 
     def sell_take_profit_signal(self):
         try:
             current_price = self.price_data.curent_price[0, self.as_bid_position]
             current_percentage = self.get_current_percentage()
-            
+
             if current_percentage <= 0:
 
                 if current_percentage > (-1 * self.sl_start):
@@ -185,7 +185,7 @@ class DefaultCloseSignal:
 
         except:
             pass
-        
+
     def run(self):
         self.subscribe_data()
         read_thread = Thread(target=self.read_data, args=())

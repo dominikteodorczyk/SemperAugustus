@@ -1,5 +1,5 @@
 """
-The module includes a tool to generate a personalized logging tool
+The module includes a technical tools
 """
 
 import os
@@ -7,10 +7,9 @@ import logging
 from settings import LoggerPaths
 
 
-
 def setup_logger(
     name: str, log_file_name: str, level_of_log=logging.INFO, print_logs: bool = False
-    ) -> logging.Logger:
+) -> logging.Logger:
     """
     Set up a logger with the specified name, log file, log level, and print option.
 
@@ -22,7 +21,6 @@ def setup_logger(
 
     Returns:
         logging.Logger: Configured logger object.
-
     """
 
     log_path = os.path.join(LoggerPaths().log_path, log_file_name)
@@ -32,7 +30,8 @@ def setup_logger(
 
     logger = logging.getLogger(name)
     message_format = logging.Formatter(
-        "%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S")
+        "%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
     file_handler = logging.FileHandler(log_path)
     file_handler.setFormatter(message_format)
     logger.setLevel(level_of_log)

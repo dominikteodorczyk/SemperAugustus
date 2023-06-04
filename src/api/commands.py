@@ -13,7 +13,7 @@ def get_trades(api, order_no=None):
         order_no: An optional integer representing the order number.
 
     Returns:
-        A dictionary containing the trading data for the specified order, 
+        A dictionary containing the trading data for the specified order,
         or None if no data was found.
     """
     message = {"command": "getTrades", "arguments": {"openedOnly": True}}
@@ -43,7 +43,7 @@ def get_trades(api, order_no=None):
 def get_margin(api:object, symbol:str, volume:float):
 
     message = {
-        "command": "getMarginTrade", 
+        "command": "getMarginTrade",
         "arguments": {
             "symbol": symbol,
             "volume": volume
@@ -62,7 +62,7 @@ def buy_transaction(api: object, symbol: str, volume: float) -> dict:
         volume: A float representing the volume of the asset to be bought.
 
     Returns:
-        A dictionary containing the order number and transaction data for the 
+        A dictionary containing the order number and transaction data for the
         position opened, or None if the transaction failed.
 
     """
@@ -122,7 +122,7 @@ def sell_transaction(api: object, symbol: str, volume: float) -> dict:
         volume: A float representing the volume of the asset to be bought.
 
     Returns:
-        A dictionary containing the order number and transaction data for 
+        A dictionary containing the order number and transaction data for
         the position opened, or None if the transaction failed.
 
     """
@@ -176,7 +176,7 @@ def sell_transaction(api: object, symbol: str, volume: float) -> dict:
 
 def close_position(
         api: object, symbol: str, position:int, volume: float, cmd:int):
-    
+
     close_arguments = {
         "tradeTransInfo": {
             "cmd": cmd,
@@ -207,7 +207,7 @@ def close_position(
 
             while data_recive == False:
                 sleep(1)
-                try:    
+                try:
                     trades_stats = api.send_n_return(
                         {"command":"getTradesHistory",
                         "arguments":{
@@ -227,7 +227,7 @@ def close_position(
                                 "open_price": trade["open_price"],
                                 "open_time": trade["open_time"],
                                 "close_price":trade["close_price"],
-                                "close_time": trade["close_time"],} 
+                                "close_time": trade["close_time"],}
                 except:
                     pass
 
@@ -258,7 +258,7 @@ def get_historical_candles(api, symbol:str, shift:int, period:int = 1):
                 candle_data[0,3] = candle_data[0,1] + candle_data[0,3]
                 candle_data[0,4] = candle_data[0,1] + candle_data[0,4]
                 historical_data = np.vstack([historical_data, candle_data])
-            
+
             data_status = True
         except:
             sleep(2)
@@ -272,4 +272,4 @@ def get_server_time(api):
 
 
 
-    
+
