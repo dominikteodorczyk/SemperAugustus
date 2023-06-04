@@ -7,33 +7,29 @@ from time import sleep
 from src.utils.setup_loger import setup_logger
 from src.utils.wallet import Wallet
 from src.utils.technical_utils import SessionTechnicalController
+from typing import Optional
 
 
 class TradingSession(object):
-    def __init__(self, symbols:list = None) -> None:
+    def __init__(self, symbols: list = None) -> None:
         self.symbols = symbols
         # init object with risk data and portfolio management
-        self.wallet = Wallet() 
-        # init object containing data on technical aspects of the session 
+        self.wallet = Wallet()
+        # init object containing data on technical aspects of the session
         # such as (spread, volume levels, volatility)
         self.session_control = SessionTechnicalController(symbols=symbols)
         # init trading pool object of all symbols
-        self.trading_pool = TradingPool(symbols = symbols)
-        
+        self.trading_pool = TradingPool(symbols=symbols)
 
     def session_init(self):
         # Initialization of threads for the risk manager, session controller and trading pool
-        wallet_thread = Thread(
-            target=self.wallet.run, 
-            args=())
-        
-        session_control_thread = Thread(
-            target=self.session_control.run, 
-            args=())
-        
+        wallet_thread = Thread(target=self.wallet.run, args=())
+
+        session_control_thread = Thread(target=self.session_control.run, args=())
+
         trading_pool_thread = Thread(
-            target=self.trading_pool.run_pool, 
-            args=(self.wallet, self.session_control))
+            target=self.trading_pool.run_pool, args=(self.wallet, self.session_control)
+        )
 
         wallet_thread.start()
         session_control_thread.start()
@@ -45,23 +41,24 @@ class TradingSession(object):
 
 
 class TradingPool(object):
-
     def __init__(self, symbols) -> None:
         self.symbols = symbols
 
     def run_pool(self, risk_data, session_data):
         self.risk_data = risk_data
         self.session_data = session_data
-        
+
         slots = []
         for symbol in self.symbols:
             thread = Thread(
-                target=TradingSlot(symbol).run_slot, 
-                args=(self.risk_data, self.session_data))
+                target=TradingSlot(symbol).run_slot,
+                args=(self.risk_data, self.session_data),
+            )
             thread.start()
             slots.append(thread)
-        
-        for slot in slots: slot.join()
+
+        for slot in slots:
+            slot.join()
 
 
 class TradingSlot(object):
@@ -73,14 +70,17 @@ class TradingSlot(object):
 
     def run_slot(self, risk_data, session_data):
         # data stream thread with a separate api client
-        data_thread = Thread(
-            target=self.symbol_data.run, 
-            args=())
-        # trading thread on a given symbol using stream data for the symbol, 
+        data_thread = Thread(target=self.symbol_data.run, args=())
+        # trading thread on a given symbol using stream data for the symbol,
         # as well as risk and technical session fitness data
         position_thread = Thread(
-            target=Trader(symbol=self.symbol).run, 
-            args=(self.symbol_data, risk_data,session_data,))
+            target=Trader(symbol=self.symbol).run,
+            args=(
+                self.symbol_data,
+                risk_data,
+                session_data,
+            ),
+        )
 
         data_thread.start()
         position_thread.start()
@@ -90,9 +90,9 @@ class TradingSlot(object):
 
 
 class Trader(object):
-    def __init__(self,symbol) -> None:
+    def __init__(self, symbol) -> None:
         self.symbol = symbol
-        self.buy_model = MovingAVG(symbol=symbol,period=1)
+        self.buy_model = MovingAVG(symbol=symbol, period=1)
 
     def open_position(self):
         while True:
@@ -105,15 +105,10 @@ class Trader(object):
 
             position.run()
 
+    def run(self, symbol_data, risk_data, session_data):
+        buy_model_thread = Thread(target=self.buy_model.run, args=(symbol_data,))
 
-    def run(self,symbol_data, risk_data,session_data):
-        buy_model_thread = Thread(
-            target=self.buy_model.run,
-            args=(symbol_data,))
-        
-        position_thread = Thread(
-            target=self.open_position,
-            args=())
+        position_thread = Thread(target=self.open_position, args=())
         buy_model_thread.start()
 
         while True:
@@ -128,11 +123,26 @@ class Trader(object):
         position_thread.join()
 
 
-class Position:
+class Position(object):
+    """
+    Represents a trading position.
+
+    Args:
+        cmd (int): The command for the position. 0 for buy, 1 for sell.
+        symbol (str): The symbol of the asset.
+        volume (float): The volume of the asset to trade.
+        close_signal (object, optional): The close signal object. 
+            Defaults to None.
+    """
+
     def __init__(
-        self, cmd, symbol: str, volume: float, close_signal: object = None
+        self,
+        cmd: int,
+        symbol: str,
+        volume: float,
+        close_signal: Optional[object] = None,
     ):
-        self.api = Client('DEMO')
+        self.client = Client("DEMO")
         self.cmd = cmd
         self.symbol = symbol
         self.volume = volume
@@ -142,22 +152,27 @@ class Position:
         )
 
     def run(self):
-        self.api.open_session()
+        """
+        Executes the position and logs the result.
+        """
+        self.client.open_session()
+
         if self.cmd == 0:
             self.order = buy_transaction(
-                api=self.api, symbol=self.symbol, volume=self.volume
+                api=self.client, symbol=self.symbol, volume=self.volume
             )
-            self.close_signal.set_params(api=self.api, position_data=self.order, sl_start= 1.5)
-            self.close_signal.run()
         if self.cmd == 1:
             self.order = sell_transaction(
-                api=self.api, symbol=self.symbol, volume=self.volume
+                api=self.client, symbol=self.symbol, volume=self.volume
             )
-            self.close_signal.set_params(api=self.api, position_data=self.order, sl_start= 1.5)
-            self.close_signal.run()
+
+        self.close_signal.set_params(
+                api=self.client, position_data=self.order, sl_start=1.5
+            )
+        self.close_signal.run()
 
         profit = self.close_signal.closedata["profit"]
         self.position_logger.info(
             f'{self.order["order_no"]} CLOSED WITH PROFIT: {profit}'
         )
-        self.api.close_session()
+        self.client.close_session()
