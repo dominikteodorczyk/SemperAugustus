@@ -1,6 +1,6 @@
 """
-The module allows you to run a trading session with the use of an entry model 
-and an exit model. 
+The module allows you to run a trading session with the use of an entry model
+and an exit model.
 """
 
 from time import sleep
@@ -17,7 +17,7 @@ from src.utils.technical_utils import SessionTechnicalController
 
 class TradingSession():
     """
-    Trading session object supporting multi-threaded monitoring of portfolio risk, 
+    Trading session object supporting multi-threaded monitoring of portfolio risk,
     technical aspects of the session and trading slot pools for defined symbols.
 
     Args:
@@ -27,12 +27,12 @@ class TradingSession():
         symbols (list): A list of symbols associated with the trading session.
         wallet: The wallet object for managing the session's portfolio. Init object
             with risk data and portfolio management (functionality under development).
-        session_control: The session technical controller object for managing 
-            technical aspects of the session such as spread, volume levels, 
+        session_control: The session technical controller object for managing
+            technical aspects of the session such as spread, volume levels,
             volatility (functionality under development).
         trading_pool: The trading pool object for all symbols in the session.
     """
-    
+
     def __init__(self, symbols: list) -> None:
         self.symbols = symbols
         self.wallet = Wallet()
@@ -62,16 +62,16 @@ class TradingSession():
 class TradingPool():
     """
     Facility that manages the slots of individual trading symbols
-    
+
     Args:
         symbols (list): A list of symbols associated with the trading pool.
 
     Attributes:
         symbols (list): A list of symbols associated with the trading pool.
-            risk_data: Risk management data - position size or value of 
+            risk_data: Risk management data - position size or value of
                 starting stoplos (functionality in plans)
-            session_data: Data on the proper functioning of stock market 
-                and sessions - Market Maker's work efficiency 
+            session_data: Data on the proper functioning of stock market
+                and sessions - Market Maker's work efficiency
                 (functionality in plans)
     """
     def __init__(self, symbols:list) -> None:
@@ -84,10 +84,10 @@ class TradingPool():
         Starts thread pools for all defined symbols.
 
         Args:
-            risk_data: Risk management data - position size or value of 
+            risk_data: Risk management data - position size or value of
                 starting stoplos (functionality in plans)
-            session_data: Data on the proper functioning of stock market 
-                and sessions - Market Maker's work efficiency 
+            session_data: Data on the proper functioning of stock market
+                and sessions - Market Maker's work efficiency
                 (functionality in plans)
         """
 
@@ -110,9 +110,9 @@ class TradingPool():
 
 class TradingSlot():
     """
-    Trading slot object for the selected symbol. The running slot 
-    supports a thread of streaming data about the given symbol 
-    (candles and current price) and a thread of the Trader making 
+    Trading slot object for the selected symbol. The running slot
+    supports a thread of streaming data about the given symbol
+    (candles and current price) and a thread of the Trader making
     decisions about entering and exiting positions.
 
     Args:
@@ -130,14 +130,14 @@ class TradingSlot():
 
     def run_slot(self, risk_data, session_data):
         """
-        Starts the trading slot of a given symbol. Starts two 
+        Starts the trading slot of a given symbol. Starts two
         threads - the data stream and the Trader.
 
         Args:
-            risk_data: Risk management data - position size or value of 
+            risk_data: Risk management data - position size or value of
                 starting stoplos (functionality in plans)
-            session_data: Data on the proper functioning of stock market 
-                and sessions - Market Maker's work efficiency 
+            session_data: Data on the proper functioning of stock market
+                and sessions - Market Maker's work efficiency
                 (functionality in plans)
         """
 
@@ -170,7 +170,7 @@ class Trader():
 
     Attributes:
         symbol (str): The symbol being traded.
-        buy_model (MovingAVG): The moving average model used for 
+        buy_model (MovingAVG): The moving average model used for
             buying decisions.
     """
     def __init__(self, symbol) -> None:
@@ -179,12 +179,12 @@ class Trader():
 
     def open_position(self):
         """
-        Initiates an Position object with the specified parameters. 
-        The function is executed continuously in a while loop containing 
-        the next transaction after the previous one is completed according 
+        Initiates an Position object with the specified parameters.
+        The function is executed continuously in a while loop containing
+        the next transaction after the previous one is completed according
         to the instructions contained in the buy_model class attribute.
 
-        TODO:change the pattern in the future, and use the risk manager 
+        TODO:change the pattern in the future, and use the risk manager
         to calculate the size of the position
         """
         while True:
@@ -198,23 +198,23 @@ class Trader():
 
     def run(self, symbol_data, risk_data, session_data):
         """
-        Runs the threads for buy model and position. 
+        Runs the threads for buy model and position.
 
         Args:
             symbol_data: Data coming from a stream of data on the symbol
                 rather than the item
-            risk_data: Risk management data - position size or value of 
+            risk_data: Risk management data - position size or value of
                 starting stoplos (functionality in plans)
-            session_data: Data on the proper functioning of stock market 
-                and sessions - Market Maker's work efficiency 
+            session_data: Data on the proper functioning of stock market
+                and sessions - Market Maker's work efficiency
                 (functionality in plans)
         """
-        
+
         buy_model_thread = Thread(target=self.buy_model.run, args=(symbol_data,))
         position_thread = Thread(target=self.open_position, args=())
         buy_model_thread.start()
 
-        # block holding the conclusion of the position until the data is 
+        # block holding the conclusion of the position until the data is
         # calculated by the purchasing model
         while True:
             if self.buy_model.signal is None:
@@ -234,9 +234,9 @@ class Position():
     Args:
         cmd (int): The command for the position.
         symbol (str): The symbol associated with the position.
-        volume (float, optional): The volume for the 
+        volume (float, optional): The volume for the
             position (default: 0.01).
-        close_signal (object, optional): The close signal for 
+        close_signal (object, optional): The close signal for
             the position (default: DefaultCloseSignal()).
 
     Attributes:
