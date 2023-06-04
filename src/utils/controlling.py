@@ -1,25 +1,21 @@
+"""
+Module that controls the session and technical parameters of the value.
+"""
 
+class AssetTechnicalController():
+    """
+    Manages the technical aspects of a trading session. The facility monitors
+    liquidity and spreads on a given currency to catch probable malfunctions
+    of the Market Maker trading platform. It also provides data for models
+    that calculate risk
 
-class SessionTechnicalController():
-    #TODO: zauważalny jest problem niepoprwnosci dziaalnia sesji po 23
-    # dobrze było by monitorować co się dzieje i gdy zbyt dużo transakji
-    # jest zamykanych od razu przy zerowym odzewie serwera to zawiesić
-    # dany slot transakcyjny (symbol)
-    def __init__(self, symbols) -> None:
-        self.symbols = symbols
-        self.testcontroler = 2
-        pass
+    Args:
+        symbol (str): A symbol associated with the session.
 
-    def check_transaction_rupture(self):
-        pass
+    Attributes:
+        symbol (str): A symbol associated with the session.
+    """
 
-    def valid_transaction_status(self):
-        pass
+    def __init__(self, symbol:str) -> None:
+        self.symbol = symbol
 
-    def run(self):
-        pass
-
-
-class AssetParametersObservetor():
-    #TODO: clasa obiektów obserwujących dany walor pod katem jego parametrów technicznych takich jak spread itp
-    pass
