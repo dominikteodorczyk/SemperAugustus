@@ -21,3 +21,6 @@ class AssetTechnicalController():
     def __init__(self, symbol:str) -> None:
         self.symbol = symbol
 
+    def run(self):
+        pass
+

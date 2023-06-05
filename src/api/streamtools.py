@@ -2,9 +2,9 @@
 Data streaming tools
 """
 
-import numpy as np
 from threading import Thread
 from time import sleep
+import numpy as np
 from src.api.client import Client
 from src.utils.technical import setup_logger
 
