@@ -12,6 +12,9 @@ class Wallet():
     def __init__(self) -> None:
         pass
 
+    def run(self):
+        pass
+
 
 class WalletPerform():
     """

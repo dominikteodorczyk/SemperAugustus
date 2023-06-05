@@ -36,7 +36,7 @@ class TradingSession():
     def __init__(self, symbols: list) -> None:
         self.symbols = symbols
         self.wallet = Wallet()
-        self.session_control = AssetTechnicalController(symbols=symbols)
+        self.session_control = AssetTechnicalController(symbol='symbols') #FIXME: to change in the future
         self.trading_pool = TradingPool(symbols=symbols)
 
     def session_init(self):
@@ -274,15 +274,15 @@ class Position():
 
         if self.cmd == 0:
             self.order = buy_transaction(
-                api=self.client, symbol=self.symbol, volume=self.volume
+                client=self.client, symbol=self.symbol, volume=self.volume
             )
         if self.cmd == 1:
             self.order = sell_transaction(
-                api=self.client, symbol=self.symbol, volume=self.volume
+                client=self.client, symbol=self.symbol, volume=self.volume
             )
         #Combination of sl_start parameter (percentage value of position rate)
         self.close_signal.set_params(
-                api=self.client, position_data=self.order, sl_start=1.5
+                client=self.client, position_data=self.order, sl_start=1.5
             )
         self.close_signal.run()
         profit = self.close_signal.closedata["profit"]
