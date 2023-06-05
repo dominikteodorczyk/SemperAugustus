@@ -1,1 +1,1 @@
-![Alt text](.docs\graphics\sa_logo.png)
+![Alt text](.docs/graphics/sa_logo.png)
