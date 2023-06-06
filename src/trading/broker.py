@@ -5,13 +5,14 @@ and an exit model.
 
 from time import sleep
 from threading import Thread
-from src.api.client import Client
-from src.api.commands import buy_transaction, sell_transaction
-from src.models.close_signals import *
-from src.models.trends import *
-from src.utils.technical import setup_logger
-from src.utils.wallet import Wallet
-from src.utils.controlling import AssetTechnicalController
+from api.client import Client
+from api.commands import buy_transaction, sell_transaction
+from api.streamtools import DataStream
+from models.close_signals import DefaultCloseSignal
+from models.trends import MovingAVG
+from utils.technical import setup_logger
+from utils.wallet import Wallet
+from utils.controlling import AssetTechnicalController
 
 
 

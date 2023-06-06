@@ -4,9 +4,9 @@ Module containing models for closing positions.
 
 from threading import Thread
 from time import sleep
-from src.api.streamtools import *
-from src.api.commands import close_position
-from src.utils.technical import setup_logger
+from api.streamtools import *
+from api.commands import close_position
+from utils.technical import setup_logger
 
 
 
@@ -84,7 +84,7 @@ class DefaultCloseSignal:
 
     def set_params(
         self,
-        client: object,
+        client: Client,
         position_data: dict,
         sl_start: float = 2,
         tp_min: float = 0.5,

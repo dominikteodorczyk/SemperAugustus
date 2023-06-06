@@ -9,7 +9,7 @@ import sys
 from threading import Thread
 from time import sleep
 from settings import UserDEMO, UserREAL
-from src.utils.technical import setup_logger
+from utils.technical import setup_logger
 
 
 
@@ -303,13 +303,13 @@ def session_simulator(func) -> tuple:
         tuple: A tuple containing the result of the wrapped function, its arguments, and its
             keyword arguments.
     """
-    api = Client(mode="DEMO")
+    client = Client(mode="DEMO")
     def wrapper(*args, **kwargs):
-        api.open_session()
-        result = func(api=api, *args, **kwargs)
-        api.close_session()
+        client.open_session()
+        result = func(client=client, *args, **kwargs)
+        client.close_session()
         return result, args, kwargs
-    wrapper.attrib = api
+    wrapper.attrib = client
     return wrapper
 
 
@@ -327,16 +327,16 @@ def stream_session_simulator(time):
     """
 
     def decorator(func):
-        api = Client(mode="DEMO")
+        client = Client(mode="DEMO")
         def wrapper(*args, **kwargs):
-            api.open_session()
-            object = func(api=api, *args, **kwargs)
+            client.open_session()
+            object = func(client=client, *args, **kwargs)
             Thread(target=object.stream, args=(), daemon=True).start()
             sleep(time)
             result = object.__dict__
-            api.close_session()
+            client.close_session()
             return result, args, kwargs
-        wrapper.attrib = api
+        wrapper.attrib = client
         return wrapper
 
     return decorator

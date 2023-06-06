@@ -3,8 +3,8 @@ Check the Client of XTB API is valid.
 """
 
 import pytest
-from src.api.client import *
-from src.api.streamtools import *
+from api.client import *
+from api.streamtools import *
 
 
 class Test_WalletStream:
@@ -27,7 +27,7 @@ class Test_WalletStream:
     def test_walletstream_is_having_api(self, event):
         results = event()
         assert (
-            type(results[0]["api"]) is Client
+            type(results[0]["client"]) is Client
         )  # api should be an object of class Client (passed to function from wrapper)
 
     @pytest.mark.xfail(reason="API sometimes failed to send data during stream")
@@ -46,7 +46,7 @@ class Test_WalletStream:
             np.shape(results[0]["balance"])[0] is 10
         )  # API will send a portfolio balance consisting of 10 parameters
 
-
+@pytest.mark.skip(reason="Class withdrawn / to be rebuilt")
 class Test_AssetBOX:
 
     # stream duration definition
@@ -68,7 +68,7 @@ class Test_AssetBOX:
         # 'candle_1M': candle_1M, 'candle_5M': candle_5M, 'candle_15M': candle_15M, 'price': price},
         # returns[1] = args,
         # returns[2] = kwargs
-        return stream_session_simulator(event_duration)(AssetObservator)(
+        return stream_session_simulator(event_duration)(PositionObservator)(
             symbol=event_symbol
         )
 
@@ -88,14 +88,14 @@ class Test_AssetBOX:
     )
     def test_AssetBOX_have_attribut(self, event_symbol, atribut):
         # A test to see if a class object, when initialized, has a set of defined attributes
-        assert hasattr(AssetObservator(symbol=event_symbol), atribut) is True
+        assert hasattr(PositionObservator(symbol=event_symbol), atribut) is True
 
     def test_AssetBOX_have_Client_as_api_after_init(self, event_symbol):
         # test to check the correctness of assigning objects to attributes
         api = Client("DEMO")
         api.opensession()
         assert (
-            type(AssetObservator(api=api, symbol=event_symbol).api) == Client
+            type(PositionObservator(api=api, symbol=event_symbol).api) == Client
         )  # should be the same
         api.closesession()
 
@@ -104,7 +104,7 @@ class Test_AssetBOX:
         api = Client("DEMO")
         api.opensession()
         assert (
-            AssetObservator(api=api, symbol=event_symbol).symbol == event_symbol
+            PositionObservator(api=api, symbol=event_symbol).symbol == event_symbol
         )  # should be the same
         api.closesession()
 
@@ -127,7 +127,7 @@ class Test_AssetBOX:
         api = Client("DEMO")
         api.opensession()
         assert (
-            AssetObservator(api=api, symbol=event_symbol).__getattribute__(atribut)
+            PositionObservator(api=api, symbol=event_symbol).__getattribute__(atribut)
             == expected
         )  # should be the same
         api.closesession()

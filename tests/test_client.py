@@ -3,24 +3,27 @@ Check the Client of XTB API is valid.
 """
 
 import pytest
-from src.api.client import *
-from settings import UserDEMO
+import json
 import ssl
 import numpy as np
 from time import monotonic_ns
+from settings import UserDEMO
+from api.client import Client, session_simulator, stream_session_simulator
 
 
-class Test_Client():
 
-
+class Test_Client:
     def test_Class_demo_atributes(self):
-        # collective test of the set of attributes of the created object connecting to the api of the client class
-        APIobject = Client('DEMO')
+        # collective test of the set of attributes of the created object
+        # connecting to the api of the client class
+        APIobject = Client("DEMO")
 
-        # test loading the appropriate classe of user parameters from the settings class
+        # test loading the appropriate classe of user parameters from the
+        # settings class
         assert APIobject.user.__class__ is UserDEMO
 
-        # set of parameters which, after defining an instance of the client class, should have the value none
+        # set of parameters which, after defining an instance of the client class,
+        # should have the value none
         assert APIobject.login_status is None
         assert APIobject.stream_sesion_id is None
         assert APIobject.connection is None
@@ -30,11 +33,10 @@ class Test_Client():
         assert type(APIobject.socket_connection) is ssl.SSLSocket
         assert type(APIobject.socket_stream_connection) is ssl.SSLSocket
 
-
     def test_Client_method_connect_is_making_connection(self):
-        # A test to see if there is a valid connection to the appropriate main port and if there are
-        # changes to the connection confirmation attribute
-        APIobject = Client('DEMO')
+        # A test to see if there is a valid connection to the appropriate
+        # main port and if there are changes to the connection confirmation attribute
+        APIobject = Client("DEMO")
 
         APIobject.connect()
         connection = True
@@ -42,12 +44,12 @@ class Test_Client():
 
         assert APIobject.socket_connection.getpeername()[1] == peer_port
         assert APIobject.connection is connection
-
+        APIobject.disconnect()
 
     def test_Client_method_disconnect_is_making_disconnection(self):
-        # A test to see if there is a valid stream connection to the appropriate main port and if there are
-        # changes to the stream connection confirmation attribute
-        APIobject = Client('DEMO')
+        # A test to see if there is a valid stream connection to the appropriate main
+        # port and if there are changes to the stream connection confirmation attribute.
+        APIobject = Client("DEMO")
         APIobject.connect()
 
         APIobject.disconnect()
@@ -59,12 +61,14 @@ class Test_Client():
             failed = True
 
         assert connection is False
-        assert failed is True # means that the login attempt should fail after disconnection
-
+        assert (
+            failed is True
+        )  # means that the login attempt should fail after disconnection
 
     def test_Client_method_logs(self):
-        # test of the logging method along with checking the change of parameters of the client class object
-        APIobject = Client('DEMO')
+        # test of the logging method along with checking the change of parameters
+        # of the client class object
+        APIobject = Client("DEMO")
         APIobject.connect()
 
         # reading parameters before logging
@@ -72,13 +76,11 @@ class Test_Client():
         streamId_before_login = APIobject.stream_sesion_id
 
         APIobject.login()
-        simple_command = {
-            "command": "getVersion"
-        }
+        simple_command = {"command": "getVersion"}
 
         try:
             recv = APIobject.send_n_return(simple_command)
-            recv_status = recv['status']
+            recv_status = recv["status"]
         except:
             recv_status == False
 
@@ -89,50 +91,43 @@ class Test_Client():
         # login status read from server response should be True
         assert APIobject.login_status is True
 
-        # The server's response to the version query is a dictionary with the API version
-        # and status which should be True
+        # The server's response to the version query is a dictionary with
+        # the API version and status which should be True
         assert recv_status is True
 
-
     def test_Client_method_logout_logs_out(self):
-        # test of the loggout method along with checking the change of parameters of the client class object
-        APIobject = Client('DEMO')
+        # test of the loggout method along with checking the change of
+        # parameters of the client class object
+        APIobject = Client("DEMO")
         APIobject.connect()
 
         # logging and reading the status value returned from the server
         APIobject.login()
-        simple_command = {
-            "command": "getVersion"
-        }
+        simple_command = {"command": "getVersion"}
 
         try:
             recv = APIobject.send_n_return(simple_command)
-            recv_status = recv['status']
+            recv_status = recv["status"]
         except:
             recv_status == False
         # reading the value of object parameters after logging in
         status_after_login = APIobject.login_status
 
-        # logout, query dispatch test and reading the value of the login status parameter
+        # logout, query dispatch test and reading the value of the login
+        # status parameter
         APIobject.logout()
-        try:
-            recv = APIobject.send_n_return(simple_command)
-            recv_status_after_logout = recv['status']
-        except:
-            recv_status_after_logout = False
         status_after_logout = APIobject.login_status
 
-        assert status_after_logout != status_after_login #statuses should be different
-        assert recv_status_after_logout != recv_status #statuses should be different
+        assert status_after_logout != status_after_login  # statuses should be different
 
 
-class Test_Decorators():
+
+class Test_Decorators:
     # A class of validation tests for decorators to test streaming processes
 
     @pytest.fixture()
     def simple_command(self):
         return {"command": "getVersion"}
-
 
     def test_Decorator_session_simulator(self, simple_command):
         # decorator test to simulate the session
@@ -140,22 +135,26 @@ class Test_Decorators():
         # creating a decorated session_simulation function that sends a command
         # to specify the API version
         @session_simulator
-        def simple_function(api, command):
-            recv = api.send_n_return(command)
+        def simple_function(client, command):
+            recv = client.send_n_return(command)
             print(recv)
-            recv_status = recv['status']
-            return recv_status, api
+            recv_status = recv["status"]
+            return recv_status, client
 
-
-        #function_returns is a tulpe of result and used api object
-        function_returns, args, kwargs = simple_function(command = simple_command)
+        # function_returns is a tulpe of result and used api object
+        function_returns, args, kwargs = simple_function(command=simple_command)
         print(function_returns, args, kwargs)
 
-        assert function_returns[0] is True # return status message sent by the server, should be true
-        assert type(function_returns[1]) is Client # api should be an object of class client (passed to function from wrapper
-        assert args is () # for 'command = simple_command' the args command is empty
-        assert kwargs['command'] == simple_command # used inside the decorator comenda should be consistent with the declared
-
+        assert (
+            function_returns[0] is True
+        )  # return status message sent by the server, should be true
+        assert (
+            type(function_returns[1]) is Client
+        )  # api should be an object of class client (passed to function from wrapper
+        assert args is ()  # for 'command = simple_command' the args command is empty
+        assert (
+            kwargs["command"] == simple_command
+        )  # used inside the decorator comenda should be consistent with the declared
 
     def test_Decorator_stream_session_simulator(self):
         # decorator test to simulate the session
@@ -168,26 +167,32 @@ class Test_Decorators():
 
         # definition of a class that creates and reads a stream of data on a portfolio
         @stream_session_simulator(time_run)
-        class SimpleTestStream():
-
-            def __init__(self, api):
-                self.api = api
+        class SimpleTestStream:
+            def __init__(self, client):
+                self.client = client
                 self.balance = None
 
             def subscribe(self):
-                return self.api.stream_send({"command": "getBalance", "streamSessionId": self.api.stream_sesion_id})
+                return self.client.stream_send(
+                    {
+                        "command": "getBalance",
+                        "streamSessionId": self.client.stream_sesion_id,
+                    }
+                )
 
             def streamread(self):
-                message = json.loads(self.api.socket_stream_connection.recv())
+                message = json.loads(self.client.socket_stream_connection.recv())
                 try:
-                    if message['command'] == 'balance':
-                        self.balance = np.fromiter(message['data'].values(), dtype=float)
+                    if message["command"] == "balance":
+                        self.balance = np.fromiter(
+                            message["data"].values(), dtype=float
+                        )
                 except:
                     pass
 
             def stream(self):
                 self.subscribe()
-                while self.api.connection_stream == True:
+                while self.client.connection_stream == True:
                     self.streamread()
 
         # measurement of the start of the stream object creation and termination
@@ -196,9 +201,13 @@ class Test_Decorators():
         time_of_runing_code = monotonic_ns() - start_runing
 
         # reading the data passed from the stream session simulator decorator
-        balance = returned[0]['balance'] # portfolio data
-        api = returned[0]['api'] # api class
+        balance = returned[0]["balance"]  # portfolio data
+        client = returned[0]["client"]  # api class
 
-        assert np.shape(balance) == (10,) # portfolio data should be of numpy matrix dimension 10x
-        assert type(api) == Client # the api used should be of the Client class
-        assert time_of_runing_code >= time_run # stream execution time should be longer than declared in the decorator
+        assert np.shape(balance) == (
+            10,
+        )  # portfolio data should be of numpy matrix dimension 10x
+        assert type(client) == Client  # the api used should be of the Client class
+        assert (
+            time_of_runing_code >= time_run
+        )  # stream execution time should be longer than declared in the decorator

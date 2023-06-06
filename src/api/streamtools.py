@@ -5,8 +5,8 @@ Data streaming tools
 from threading import Thread
 from time import sleep
 import numpy as np
-from src.api.client import Client
-from src.utils.technical import setup_logger
+from api.client import Client
+from utils.technical import setup_logger
 
 
 class WalletStream:
