@@ -5,7 +5,7 @@ Module containing commands to APIs used outside the data stream.
 import logging
 from time import sleep
 import numpy as np
-from src.api.client import Client
+from api.client import Client
 
 
 def get_trades(client: Client, order_no: int = None) -> dict:
@@ -42,7 +42,7 @@ def get_trades(client: Client, order_no: int = None) -> dict:
             pass
 
 
-def get_margin(client: object, symbol: str, volume: float) -> float:
+def get_margin(client: Client, symbol: str, volume: float) -> float:
     """
     Calculate the margin required for a given trading position.
 
@@ -247,7 +247,7 @@ def close_position(
 
 def get_historical_candles(
     client, symbol: str, shift: int, period: int = 1
-) -> np.array:
+) -> np.ndarray:
     """
     Retrieve historical candle data for a specific symbol.
 
@@ -258,7 +258,7 @@ def get_historical_candles(
         period (int, optional): The period of each candle in minutes. Defaults to 1.
 
     Returns:
-        np.array: An array containing the historical candle data.
+        np.ndarray: An array containing the historical candle data.
     """
     # shift its a offset in minutes
     start_times = get_server_time(client) - (shift * 6e4)

@@ -9,7 +9,7 @@ in the XTB offer:
 https://www.xtb.com/en/trading-services/account-information/market-specification#forex
 """
 
-from src.trading.broker import TradingSession
+from trading.broker import TradingSession
 
 
 

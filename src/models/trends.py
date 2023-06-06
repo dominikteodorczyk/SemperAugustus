@@ -5,8 +5,8 @@ Module containing models that make decisions based on trend.
 from threading import Thread
 from time import sleep
 import numpy as np
-from src.api.client import Client
-from src.api.commands import get_historical_candles
+from api.client import Client
+from api.commands import get_historical_candles
 
 
 
