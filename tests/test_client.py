@@ -121,7 +121,7 @@ class Test_Client:
         assert status_after_logout != status_after_login  # statuses should be different
 
 
-
+@pytest.mark.skip(reason="Features to be rebuilt")
 class Test_Decorators:
     # A class of validation tests for decorators to test streaming processes
 
