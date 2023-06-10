@@ -1,9 +1,9 @@
 '''
-Module containing objects that create data classes that configure the operation 
+Module containing objects that create data classes that configure the operation
 of the apllication
 '''
 
-from os import getenv
+from os import getenv, path, makedirs
 from dotenv import load_dotenv
 
 
@@ -14,21 +14,21 @@ class UserDEMO():
     Attributes:
         login (str): The login credential for the XTB demo trading account.
         password (str): The password credential for the XTB demo trading account.
-        host (str): The host or server address for connecting to the XTB API 
+        host (str): The host or server address for connecting to the XTB API
             in demo trading mode.
-        main_port (int): The main port number for establishing a connection with 
+        main_port (int): The main port number for establishing a connection with
             the XTB API in demo trading mode.
-        streaming_port (int): The streaming port number for real-time data from 
+        streaming_port (int): The streaming port number for real-time data from
             the XTB API in demo trading mode.
-        websocket (str): The WebSocket URL for connecting to the XTB API in demo 
+        websocket (str): The WebSocket URL for connecting to the XTB API in demo
             trading mode.
-        websocket_streaming_port (str): The WebSocket streaming port number for 
+        websocket_streaming_port (str): The WebSocket streaming port number for
             real-time data from the XTB API in demo trading mode.
     """
 
     def __init__(self) -> None:
         """
-        Initialize a new UserDEMO instance. This constructor loads the required 
+        Initialize a new UserDEMO instance. This constructor loads the required
         environment variables and initializes the instance variables.
         """
 
@@ -44,22 +44,22 @@ class UserDEMO():
 
 class UserREAL():
     """
-    UserREAL class represents a user for XTB real trading. It provides the necessary 
-    credentials and connection information to interact with the XTB API in the 
+    UserREAL class represents a user for XTB real trading. It provides the necessary
+    credentials and connection information to interact with the XTB API in the
     real trading environment.
 
     Attributes:
         login (str): The login credential for the XTB real trading account.
         password (str): The password credential for the XTB real trading account.
-        host (str): The host or server address for connecting to the XTB API in 
+        host (str): The host or server address for connecting to the XTB API in
             real trading mode.
-        main_port (int): The main port number for establishing a connection with 
+        main_port (int): The main port number for establishing a connection with
             the XTB API in real trading mode.
-        streaming_port (int): The streaming port number for real-time data from 
+        streaming_port (int): The streaming port number for real-time data from
             the XTB API in real trading mode.
-        websocket (str): The WebSocket URL for connecting to the XTB API in real 
+        websocket (str): The WebSocket URL for connecting to the XTB API in real
             trading mode.
-        websocket_streaming_port (str): The WebSocket streaming port number for 
+        websocket_streaming_port (str): The WebSocket streaming port number for
             real-time data from the XTB API in real trading mode.
     """
 
@@ -83,4 +83,8 @@ class LoggerPaths():
     """
     def __init__(self) -> None:
         load_dotenv(verbose=True)
-        self.log_path = getenv('DEF_LOG_PATH')
+        log_path = getenv('DEF_LOG_PATH')
+        # src_path = path.join(path.dirname(__file__), "src")
+        self.log_path = path.join(path.dirname(__file__), getenv('DEF_LOG_PATH'))
+        if not path.exists(self.log_path):
+            makedirs(self.log_path)
