@@ -7,42 +7,49 @@ import socket
 import ssl
 import sys
 from threading import Thread
+from typing import Union, Callable, Any
 from time import sleep
-from settings import UserDEMO, UserREAL
+from settings import XTBUserDEMO, XTBUserREAL
 from utils.technical import setup_logger
 
 
-
-class Client:
+class XTBClient:
     """
     A client that connects to a server in either REAL or DEMO mode.
 
     Args:
-        mode (str): The mode to connect to the server in. Must be either "REAL" or "DEMO".
+        mode (str): The mode to connect to the server in. Must be either
+        "REAL" or "DEMO".
 
     Attributes:
         user: A user object representing the user associated with the client.
-        socket_connection: A secure socket connection for sending requests to the server.
-        socket_stream_connection: A secure socket connection for streaming data from the server.
-        login_status (bool): The status of the client's login. None if not logged in.
-        stream_session_id (str): The session ID for the client's streaming data session. None if
-            not streaming. connection (bool): The status of the client's connection to the server.
-            None if not connected.
-        connection_stream (bool): The status of the client's streaming data connection to the
+        socket_connection: A secure socket connection for sending requests
+            to the server.
+        socket_stream_connection: A secure socket connection for streaming
+            data from the server.
+        login_status (bool): The status of the client's login. None if not
+            logged in.
+        stream_session_id (str): The session ID for the client's streaming
+            data session. None if not streaming.
+        connection (bool): The status of the client's connection to the
             server. None if not connected.
+        connection_stream (bool): The status of the client's streaming data
+            connection to the server. None if not connected.
 
     Raises:
         ValueError: If the mode argument is not "REAL" or "DEMO".
     """
 
     def __init__(self, mode: str) -> None:
-        self.logging = setup_logger('client_logger','client.log',print_logs=False)
-        self.logging.info(f'{mode} SESSION OPENED')
+        self.logging = setup_logger(
+            "client_logger", "client.log", print_logs=False
+        )
+        self.logging.info(f"{mode} SESSION OPENED")
 
         if mode == "REAL":
-            self.user = UserREAL()
+            self.user: Union[XTBUserREAL, XTBUserDEMO] = XTBUserREAL()
         elif mode == "DEMO":
-            self.user = UserDEMO()
+            self.user = XTBUserDEMO()
         else:
             raise ValueError(
                 "Invalid mode argument. Must be either 'REAL' or 'DEMO'."
@@ -58,10 +65,10 @@ class Client:
             sock_stream, ssl_version=ssl.PROTOCOL_TLS
         )
 
-        self.login_status = None
-        self.stream_sesion_id = None
-        self.connection = None
-        self.connection_stream = None
+        self.login_status: bool = False
+        self.stream_sesion_id: str = str()
+        self.connection: bool = False
+        self.connection_stream: bool = False
 
     def connect(self):
         """
@@ -103,10 +110,14 @@ class Client:
         """
         try:
             self.socket_connection.close()
-            self.logging.info(f"Disconnected successfully from {self.user.host}")
+            self.logging.info(
+                f"Disconnected successfully from {self.user.host}"
+            )
             self.connection = False
-        except:
-            self.logging.error(f"Not disconnected from {self.user.host}")
+        except Exception as e:
+            self.logging.error(
+                f"Not disconnected from {self.user.host}, " f"details: {e}"
+            )
             self.connection = True
 
     def disconnect_stream(self):
@@ -120,12 +131,17 @@ class Client:
             )
             self.connection_stream = False
         except Exception as e:
-            self.logging.error(f"Not disconnected stream from {self.user.host}")
+            self.logging.error(
+                f"Not disconnected stream from {self.user.host} details: {e}"
+            )
             self.connection_stream = True
 
-    def send_n_return(self, packet: dict) -> dict:
+    def send_n_return(
+        self, packet: dict[Any, Any]
+    ) -> dict[str, Union[int, float, str, bool]]:
         """
-        Sends a JSON-encoded packet through the connection socket and returns the response.
+        Sends a JSON-encoded packet through the connection socket and returns
+        the response.
 
         Args:
             packet (dict): The packet to be sent.
@@ -133,14 +149,15 @@ class Client:
         Returns:
             dict: The response received from the server.
         """
-        command_type = packet["command"]
-        message = json.dumps(packet).encode("utf-8")
-        received_data = ""
-        sent = 0
+        command_type: str = packet["command"]
+        message: bytes = json.dumps(packet).encode("utf-8")
+        received_data: str = ""
+        sent: int = 0
+        response: dict[str, Union[int, float, str, bool]]
         while sent < len(message):
             sent += self.socket_connection.send(message[sent:])
         while True:
-            char = self.socket_connection.recv(4096).decode()
+            char: str = self.socket_connection.recv(4096).decode()
             received_data += char
             try:
                 (response, size) = json.JSONDecoder().raw_decode(received_data)
@@ -155,7 +172,7 @@ class Client:
                 continue
         return response
 
-    def stream_send(self, message: dict) -> int:
+    def stream_send(self, message: dict[str, Any]) -> int:
         """
         Sends a JSON-encoded message through the stream connection socket.
 
@@ -195,8 +212,8 @@ class Client:
 
     def login(self):
         """
-        Attempts to log in with the user's credentials and sets the login status, stream
-        session ID, and logs relevant messages.
+        Attempts to log in with the user's credentials and sets
+        the login status, stream session ID, and logs relevant messages.
         """
         packet = {
             "command": "login",
@@ -209,15 +226,18 @@ class Client:
             result = self.send_n_return(packet)
         except Exception as e:
             self.logging.warning(f"Cant log in, {e}")
-        if str(result["status"]) == "True":
+        if result["status"] is True and isinstance(
+            result["streamSessionId"], str
+        ):
             self.login_status = result["status"]
             self.stream_sesion_id = result["streamSessionId"]
             self.logging.info(
-                f'Logged as {self.user.login} (stream session id: {result["streamSessionId"]})'
+                f"Logged as {self.user.login}"
+                f"(stream session id: {result['streamSessionId']})"
             )
         else:
             self.login_status = False
-            self.logging.error(f"Not logged")
+            self.logging.error("Not logged")
 
     def logout(self):
         """
@@ -229,17 +249,17 @@ class Client:
             self.logging.info(f"Logged out of {self.user.login}")
             self.login_status = False
         else:
-            self.logging.error(f"Not logged out")
+            self.logging.error("Not logged out")
             self.login_status = True
 
     def open_session(self):
         """
-        Establishes a session with the server by connecting to the main and streaming ports and
-        logging in with the user credentials.
+        Establishes a session with the server by connecting to the main
+        and streaming ports and logging in with the user credentials.
 
         Raises:
-            SystemExit: If the connection cannot be established after six attempts or if the
-            login is unsuccessful.
+            SystemExit: If the connection cannot be established after
+                six attempts or if the login is unsuccessful.
         """
         try:
             for i in range(6):
@@ -247,18 +267,20 @@ class Client:
                     self.connect()
                     self.connect_stream()
                     break
-                except:
-                    print("Wait...")
+                except ConnectionError as e:
+                    self.logging.info(f"Wait... {e}")
                     sleep(10)
             self.login()
-        except:
-            self.logging.warning(f"Session interrupted, unable to connect.")
+        except ConnectionError as e:
+            self.logging.warning(
+                f"Session interrupted, unable to connect. Details: {e}"
+            )
             sys.exit(0)
 
     def close_session(self):
         """
-        Closes the session by logging out, disconnecting from the streaming server and the main
-        server.
+        Closes the session by logging out, disconnecting from the streaming
+        server and the main server.
         """
         self.logout()
         self.disconnect_stream()
@@ -266,12 +288,13 @@ class Client:
 
     def reconnect(self):
         """
-        Try to reconnect the client to the server. If the connection is not successful, the
-        function will try again for up to 10 times, waiting 5 seconds between attempts. If the
-        connection is restored, the client will log in again. If the connection cannot be restored,
-        the function will print a warning message and exit the program.
+        Try to reconnect the client to the server. If the connection is not
+        successful, the function will try again for up to 10 times, waiting
+        5 seconds between attempts. If the  connection is restored, the client
+        will log in again. If the connection cannot be restored, the function
+        will print a warning message and exit the program.
         """
-        if self.connection != True:
+        if self.connection is not True:
             for i in range(1, 10):
                 try:
                     self.logging.info("Trying to reconnect")
@@ -280,54 +303,57 @@ class Client:
                     self.login()
                     self.logging.info("Reconnected")
                     break
-                except:
+                except ConnectionError:
                     self.logging.info(
                         "No way to restore the connection. Trying again"
                     )
                     sleep(5)
-            if self.connection == None:
-                self.logging.warning(f"Session interrupted, unable to connect.")
+            if self.connection is False:
+                self.logging.warning("Session interrupted, unable to connect.")
                 sys.exit(0)
         else:
             pass
 
 
-def session_simulator(func) -> tuple:
+def session_simulator(func: Callable[..., Any]) -> Callable[..., Any]:
     """
-    A decorator that allows simulated sessions to include a single process as part of testing.
+    A decorator that allows simulated sessions to include a single process as
+    part of testing.
 
     Args:
         func: A function that needs to be wrapped.
 
     Returns:
-        tuple: A tuple containing the result of the wrapped function, its arguments, and its
-            keyword arguments.
+        Callable: A wrapped function.
     """
-    client = Client(mode="DEMO")
-    def wrapper(*args, **kwargs):
+    client = XTBClient(mode="DEMO")
+
+    def wrapper(*args, **kwargs) -> Any:
         client.open_session()
-        result = func(client=client, *args, **kwargs)
+        result: Any = func(client=client, *args, **kwargs)
         client.close_session()
         return result, args, kwargs
-    wrapper.attrib = client
+
     return wrapper
 
 
-def stream_session_simulator(time):
+def stream_session_simulator(time: int) -> Any:
     """
-    Decorator that allows simulated stream sessions to include a single stream process as
+    Decorator that allows simulated stream sessions to include a single
+    stream process as
     part of testing.
 
     Parameters:
-        time (float): the duration of the stream session in seconds.
+        time (int): the duration of the stream session in seconds.
 
     Returns:
         tuple: a tuple that contains the result of the original function,
             along with the arguments and keyword arguments passed to it.
     """
 
-    def decorator(func):
-        client = Client(mode="DEMO")
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        client = XTBClient(mode="DEMO")
+
         def wrapper(*args, **kwargs):
             client.open_session()
             object = func(client=client, *args, **kwargs)
@@ -336,7 +362,7 @@ def stream_session_simulator(time):
             result = object.__dict__
             client.close_session()
             return result, args, kwargs
-        wrapper.attrib = client
+
         return wrapper
 
     return decorator
