@@ -42,7 +42,9 @@ class MovingAVG:
         self.means = np.empty(shape=[0, 5])
         self.mean = np.empty(shape=[0, 5])
         self.last_1M_candle = np.empty(shape=[1, 6])
-        self.signal: int = 0
+        self.signal: int = 20  # number outside the pool of orders but meeting
+        # the requirements of the specified type of variables (zero is the
+        # type of order)
 
     def get_means(self):
         """
