@@ -4,10 +4,11 @@ Module containing models for closing positions.
 
 from threading import Thread
 from time import sleep
-from api.streamtools import *
+from typing import Any
+from api.client import XTBClient
+from api.streamtools import PositionObservator
 from api.commands import close_position
 from utils.technical import setup_logger
-
 
 
 class DefaultCloseSignal:
@@ -56,37 +57,37 @@ class DefaultCloseSignal:
 
     def __init__(self):
         self.logging = setup_logger("DCS_logger", "DCS_logger.log")
-        self.closedata = None
-        self.status_to_close = False
-        self.client = None
-        self.symbol = None
-        self.order = None
-        self.position = None
-        self.open_price = None
-        self.margin = None
-        self.cmd = None
-        self.volume = None
-        self.asymetyric_tp = None
-        self.sl_start = None
-        self.tp_min = None
-        self.tp_max = None
-        self.price_data = None
-        self.multiplier_value = None
-        self.as_bid_position = None
+        self.closedata: dict[str, Any]
+        self.status_to_close: bool = False
+        self.client: XTBClient
+        self.symbol: str
+        self.order: int
+        self.position: int
+        self.open_price: float
+        self.margin: float
+        self.cmd: int
+        self.volume: float
+        self.asymetyric_tp: float
+        self.sl_start: float
+        self.tp_min: float
+        self.tp_max: float
+        self.price_data: PositionObservator
+        self.multiplier_value: int
+        self.as_bid_position: int
         self.cs_function = None
-        self.not_earnings_stage = True
-        self.yes_earnings_stage = False
-        self.acc_earnings_stage_0 = False
-        self.acc_earnings_stage_05 = False
-        self.acc_earnings_stage_1 = False
-        self.acc_earnings_stage_5 = False
-        self.acc_earnings_stage_15 = False
+        self.not_earnings_stage: bool = True
+        self.yes_earnings_stage: bool = False
+        self.acc_earnings_stage_0: bool = False
+        self.acc_earnings_stage_05: bool = False
+        self.acc_earnings_stage_1: bool = False
+        self.acc_earnings_stage_5: bool = False
+        self.acc_earnings_stage_15: bool = False
 
     def set_params(
         self,
-        client: Client,
-        position_data: dict,
-        sl_start: float = 2,
+        client: XTBClient,
+        position_data: dict[str, Any],
+        sl_start: float = 2.0,
         tp_min: float = 0.5,
         tp_max: float = 0.1,
         asymetyric_tp: float = 0.5,
@@ -95,26 +96,26 @@ class DefaultCloseSignal:
         A method that allows you to define the parameters of the model after
         the execution of the transaction .
         """
-        if position_data["transactions_data"] is None:
-            print("transactions_data = None")
-
         self.client = client
-        self.symbol = position_data["transactions_data"]["symbol"]
-        self.order = position_data["order_no"]
-        self.position = position_data["transactions_data"]["position"]
-        self.open_price = position_data["transactions_data"]["cmd"]
-        self.margin = position_data["margin"]
-        self.cmd = position_data["transactions_data"]["cmd"]
-        self.volume = position_data["transactions_data"]["volume"]
+        self.order = position_data.get("order_no", 0)
+        self.margin = position_data.get("margin", 0)
         self.asymetyric_tp = asymetyric_tp
-
         self.sl_start = sl_start
         self.tp_min = tp_min
         self.tp_max = tp_max
-
-        self.price_data = PositionObservator(
-            client=client, symbol=self.symbol, order_no=self.order)
-        self.status_to_close = False
+        print("positiom:", position_data)
+        if isinstance(position_data.get("transactions_data", 0), dict):
+            transaction_data = position_data.get("transactions_data", 0)
+            self.symbol = transaction_data.get("symbol", 0)
+            self.position = transaction_data.get("position", 0)
+            self.open_price = transaction_data.get("open_price", 0)
+            self.cmd = transaction_data.get("cmd", 0)
+            self.volume = transaction_data.get("volume", 0)
+            self.price_data = PositionObservator(
+                client=client, symbol=self.symbol, order_no=self.order
+            )
+        else:
+            self.logging.info("Not transactions data")
 
         if self.cmd == 1:
             self.multiplier_value = 1
@@ -147,8 +148,8 @@ class DefaultCloseSignal:
         """
         try:
             return (self.price_data.profit / self.margin) * 100
-        except:
-            pass
+        except Exception:
+            return self.sl_start
 
     def get_candle_mean(self, cendle_data):
         """
@@ -183,8 +184,12 @@ class DefaultCloseSignal:
             pass
         else:
             self.closedata = close_position(
-                client=self.client,symbol=self.symbol,position=self.position,
-                volume=self.volume,cmd=self.cmd,)
+                client=self.client,
+                symbol=self.symbol,
+                position=self.position,
+                volume=self.volume,
+                cmd=self.cmd,
+            )
             self.status_to_close = True
 
     def calculate_sell_cs(self, candle, current_price):
@@ -197,8 +202,12 @@ class DefaultCloseSignal:
             pass
         else:
             self.closedata = close_position(
-                client=self.client,symbol=self.symbol,position=self.position,
-                volume=self.volume,cmd=self.cmd,)
+                client=self.client,
+                symbol=self.symbol,
+                position=self.position,
+                volume=self.volume,
+                cmd=self.cmd,
+            )
             self.status_to_close = True
 
     def buy_take_profit_signal(self):
@@ -207,33 +216,40 @@ class DefaultCloseSignal:
         to close positions.
         """
         try:
-            current_price = self.price_data.curent_price[0, self.as_bid_position]
+            current_price = self.price_data.curent_price[
+                0, self.as_bid_position
+            ]
             current_percentage = self.get_current_percentage()
             if current_percentage <= 0:
                 if current_percentage > (-1 * self.sl_start):
                     pass
                 else:
                     self.closedata = close_position(
-                                    client=self.client,
-                                    symbol=self.symbol,
-                                    position=self.position,
-                                    volume=self.volume,
-                                    cmd=self.cmd,
-                                )
+                        client=self.client,
+                        symbol=self.symbol,
+                        position=self.position,
+                        volume=self.volume,
+                        cmd=self.cmd,
+                    )
                     self.status_to_close = True
             if current_percentage > 0:
                 if self.price_data.minute_15.any():
-                    self.calculate_buy_cs(self.price_data.minute_15,current_price)
+                    self.calculate_buy_cs(
+                        self.price_data.minute_15, current_price
+                    )
                 elif self.price_data.minute_5.any():
-                    self.calculate_buy_cs(self.price_data.minute_5,current_price)
+                    self.calculate_buy_cs(
+                        self.price_data.minute_5, current_price
+                    )
                 elif self.price_data.minute_1.any():
-                    #self.calculate_buy_cs(self.price_data.minute_1,current_price)
+                    # self.calculate_buy_cs
+                    # (self.price_data.minute_1,current_price)
                     pass
                 elif not self.price_data.minute_1.any():
                     pass
                 else:
-                    self.logging.info('PASS')
-        except:
+                    self.logging.info("PASS")
+        except Exception:
             pass
 
     def sell_take_profit_signal(self):
@@ -242,33 +258,40 @@ class DefaultCloseSignal:
         to close positions.
         """
         try:
-            current_price = self.price_data.curent_price[0, self.as_bid_position]
+            current_price = self.price_data.curent_price[
+                0, self.as_bid_position
+            ]
             current_percentage = self.get_current_percentage()
             if current_percentage <= 0:
                 if current_percentage > (-1 * self.sl_start):
                     sleep(0.1)
                 else:
                     self.closedata = close_position(
-                                    client=self.client,
-                                    symbol=self.symbol,
-                                    position=self.position,
-                                    volume=self.volume,
-                                    cmd=self.cmd,
-                                )
+                        client=self.client,
+                        symbol=self.symbol,
+                        position=self.position,
+                        volume=self.volume,
+                        cmd=self.cmd,
+                    )
                     self.status_to_close = True
             if current_percentage > 0:
                 if self.price_data.minute_15.any():
-                    self.calculate_sell_cs(self.price_data.minute_15,current_price)
+                    self.calculate_sell_cs(
+                        self.price_data.minute_15, current_price
+                    )
                 elif self.price_data.minute_5.any():
-                    self.calculate_sell_cs(self.price_data.minute_5,current_price)
+                    self.calculate_sell_cs(
+                        self.price_data.minute_5, current_price
+                    )
                 elif self.price_data.minute_1.any():
-                    #self.calculate_sell_cs(self.price_data.minute_1,current_price)
+                    # self.calculate_sell_cs
+                    # (self.price_data.minute_1,current_price)
                     pass
                 elif not self.price_data.minute_1.any():
                     pass
                 else:
-                    self.logging.info('PASS')
-        except:
+                    self.logging.info("PASS")
+        except Exception:
             pass
 
     def run(self):
