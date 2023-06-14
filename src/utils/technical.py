@@ -8,16 +8,22 @@ from settings import LoggerPaths
 
 
 def setup_logger(
-    name: str, log_file_name: str, level_of_log=logging.INFO, print_logs: bool = False
+    name: str,
+    log_file_name: str,
+    level_of_log=logging.INFO,
+    print_logs: bool = False,
 ) -> logging.Logger:
     """
-    Set up a logger with the specified name, log file, log level, and print option.
+    Set up a logger with the specified name, log file, log level,
+    and print option.
 
     Args:
         name (str): Name of the logger.
         log_file_name (str): Name of the log file.
-        level_of_log (int, optional): Log level (default is logging.INFO).
-        print_logs (bool, optional): Whether to print logs to console (default is False).
+        level_of_log (int, optional): Log level
+            (default is logging.INFO).
+        print_logs (bool, optional): Whether to print logs to console
+            (default is False).
 
     Returns:
         logging.Logger: Configured logger object.
@@ -30,7 +36,8 @@ def setup_logger(
 
     logger = logging.getLogger(name)
     message_format = logging.Formatter(
-        "%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+        "%(asctime)s.%(msecs)04d - %(levelname)s: %(message)s",
+        "%Y-%m-%d %H:%M:%S",
     )
     file_handler = logging.FileHandler(log_path)
     file_handler.setFormatter(message_format)
