@@ -3,8 +3,7 @@ Module containing portfolio definitions and algorithms that manage risk
 """
 
 
-
-class Wallet():
+class Wallet:
     """
     Portfolio object class, calculating risk and performing money management.
     """
@@ -16,7 +15,7 @@ class Wallet():
         pass
 
 
-class WalletPerform():
+class WalletPerform:
     """
     A class of object that calculates portfolio performance over time
     and risk statistics.
@@ -26,7 +25,7 @@ class WalletPerform():
         pass
 
 
-class PortfolioRiskMenagment():
+class PortfolioRiskMenagment:
     """
     A class of object that calculates risk for the entire portfolio based
     on market behavior and performance
@@ -36,7 +35,7 @@ class PortfolioRiskMenagment():
         pass
 
 
-class AssetRiskMenagment():
+class AssetRiskMenagment:
     """
     Calculates, on the basis of the symbol data and the behavior of the
     entire portfolio, the size of the position and the starting stoplos

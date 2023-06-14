@@ -1,5 +1,5 @@
 """
-Check the Client of XTB API is valid.
+Check the XTBClient of XTB API is valid.
 """
 
 import pytest
@@ -27,8 +27,8 @@ class Test_WalletStream:
     def test_walletstream_is_having_api(self, event):
         results = event()
         assert (
-            type(results[0]["client"]) is Client
-        )  # api should be an object of class Client (passed to function from wrapper)
+            type(results[0]["client"]) is XTBClient
+        )  # api should be an object of class XTBClient (passed to function from wrapper)
 
     @pytest.mark.xfail(reason="API sometimes failed to send data during stream")
     def test_walletstream_is_returns_a_numpy_array(self, event):
@@ -90,18 +90,18 @@ class Test_AssetBOX:
         # A test to see if a class object, when initialized, has a set of defined attributes
         assert hasattr(PositionObservator(symbol=event_symbol), atribut) is True
 
-    def test_AssetBOX_have_Client_as_api_after_init(self, event_symbol):
+    def test_AssetBOX_have_XTBClient_as_api_after_init(self, event_symbol):
         # test to check the correctness of assigning objects to attributes
-        api = Client("DEMO")
+        api = XTBClient("DEMO")
         api.opensession()
         assert (
-            type(PositionObservator(api=api, symbol=event_symbol).api) == Client
+            type(PositionObservator(api=api, symbol=event_symbol).api) == XTBClient
         )  # should be the same
         api.closesession()
 
     def test_AssetBOX_have_event_symbol_as_symbol_after_init(self, event_symbol):
         # test to check the correctness of assigning objects to attributes
-        api = Client("DEMO")
+        api = XTBClient("DEMO")
         api.opensession()
         assert (
             PositionObservator(api=api, symbol=event_symbol).symbol == event_symbol
@@ -124,7 +124,7 @@ class Test_AssetBOX:
         self, event_symbol, atribut, expected
     ):
         # test to check default attribute values after ninitialization
-        api = Client("DEMO")
+        api = XTBClient("DEMO")
         api.opensession()
         assert (
             PositionObservator(api=api, symbol=event_symbol).__getattribute__(atribut)

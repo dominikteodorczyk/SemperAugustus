@@ -1,5 +1,5 @@
 """
-Check the Client of XTB API is valid.
+Check the XTBClient of XTB API is valid.
 """
 
 import pytest
@@ -7,49 +7,49 @@ import json
 import ssl
 import numpy as np
 from time import monotonic_ns
-from settings import UserDEMO
-from api.client import Client, session_simulator, stream_session_simulator
+from settings import XTBUserDEMO
+from api.client import XTBClient, session_simulator, stream_session_simulator
 
 
 
-class Test_Client:
+class Test_XTBClient:
     def test_Class_demo_atributes(self):
         # collective test of the set of attributes of the created object
         # connecting to the api of the client class
-        APIobject = Client("DEMO")
+        APIobject = XTBClient("DEMO")
 
         # test loading the appropriate classe of user parameters from the
         # settings class
-        assert APIobject.user.__class__ is UserDEMO
+        assert APIobject.user.__class__ is XTBUserDEMO
 
         # set of parameters which, after defining an instance of the client class,
         # should have the value none
-        assert APIobject.login_status is None
-        assert APIobject.stream_sesion_id is None
-        assert APIobject.connection is None
-        assert APIobject.connection_stream is None
+        assert APIobject.login_status is False
+        assert APIobject.stream_sesion_id is str()
+        assert APIobject.connection is False
+        assert APIobject.connection_stream is False
 
         # create a socket object socketpair for stream and main connection with TLS
         assert type(APIobject.socket_connection) is ssl.SSLSocket
         assert type(APIobject.socket_stream_connection) is ssl.SSLSocket
 
-    def test_Client_method_connect_is_making_connection(self):
+    def test_XTBClient_method_connect_is_making_connection(self):
         # A test to see if there is a valid connection to the appropriate
         # main port and if there are changes to the connection confirmation attribute
-        APIobject = Client("DEMO")
+        APIobject = XTBClient("DEMO")
 
         APIobject.connect()
         connection = True
-        peer_port = UserDEMO().main_port
+        peer_port = XTBUserDEMO().main_port
 
         assert APIobject.socket_connection.getpeername()[1] == peer_port
         assert APIobject.connection is connection
         APIobject.disconnect()
 
-    def test_Client_method_disconnect_is_making_disconnection(self):
+    def test_XTBClient_method_disconnect_is_making_disconnection(self):
         # A test to see if there is a valid stream connection to the appropriate main
         # port and if there are changes to the stream connection confirmation attribute.
-        APIobject = Client("DEMO")
+        APIobject = XTBClient("DEMO")
         APIobject.connect()
 
         APIobject.disconnect()
@@ -65,10 +65,10 @@ class Test_Client:
             failed is True
         )  # means that the login attempt should fail after disconnection
 
-    def test_Client_method_logs(self):
+    def test_XTBClient_method_logs(self):
         # test of the logging method along with checking the change of parameters
         # of the client class object
-        APIobject = Client("DEMO")
+        APIobject = XTBClient("DEMO")
         APIobject.connect()
 
         # reading parameters before logging
@@ -95,10 +95,10 @@ class Test_Client:
         # the API version and status which should be True
         assert recv_status is True
 
-    def test_Client_method_logout_logs_out(self):
+    def test_XTBClient_method_logout_logs_out(self):
         # test of the loggout method along with checking the change of
         # parameters of the client class object
-        APIobject = Client("DEMO")
+        APIobject = XTBClient("DEMO")
         APIobject.connect()
 
         # logging and reading the status value returned from the server
@@ -149,7 +149,7 @@ class Test_Decorators:
             function_returns[0] is True
         )  # return status message sent by the server, should be true
         assert (
-            type(function_returns[1]) is Client
+            type(function_returns[1]) is XTBClient
         )  # api should be an object of class client (passed to function from wrapper
         assert args is ()  # for 'command = simple_command' the args command is empty
         assert (
@@ -207,7 +207,7 @@ class Test_Decorators:
         assert np.shape(balance) == (
             10,
         )  # portfolio data should be of numpy matrix dimension 10x
-        assert type(client) == Client  # the api used should be of the Client class
+        assert type(client) == XTBClient  # the api used should be of the XTBClient class
         assert (
             time_of_runing_code >= time_run
         )  # stream execution time should be longer than declared in the decorator
