@@ -99,7 +99,7 @@ class PositionObservator:
         self.symbol = symbol
         self.order_no = order_no
         self.curent_price = np.empty(shape=[0, 11])
-        self.profit = None
+        self.profit: float
         self.minute_1 = np.empty(shape=[0, 7])
         self.minute_5 = np.empty(shape=[0, 7])
         self.minute_15 = np.empty(shape=[0, 7])
