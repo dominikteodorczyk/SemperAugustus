@@ -103,7 +103,6 @@ class DefaultCloseSignal:
         self.sl_start = sl_start
         self.tp_min = tp_min
         self.tp_max = tp_max
-        print("positiom:", position_data)
         if isinstance(position_data.get("transactions_data", 0), dict):
             transaction_data = position_data.get("transactions_data", 0)
             self.symbol = transaction_data.get("symbol", 0)
