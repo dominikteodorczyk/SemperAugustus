@@ -5,7 +5,8 @@ Data streaming tools
 from threading import Thread
 from time import sleep
 import numpy as np
-from api.client import Client
+from typing import Any
+from api.client import XTBClient
 from utils.technical import setup_logger
 
 
@@ -14,18 +15,19 @@ class WalletStream:
     Represents a wallet data stream.
 
     Args:
-        client(Client): The API client object associated with the wallet stream.
+        client(XTBClient): The API client object associated with
+            the wallet stream.
 
     Attributes:
         client: The API client object associated with the wallet stream.
         balance: The balance of the wallet.
     """
 
-    def __init__(self, client: Client = None) -> None:
+    def __init__(self, client: XTBClient) -> None:
         self.client = client
-        self.balance = None
+        self.balance: np.ndarray[Any, np.dtype[Any]] = np.array([])
 
-    def subscribe(self):
+    def subscribe(self) -> None:
         """
         Subscribes to portfolio data for obtaining stream data from api.
         """
@@ -36,19 +38,22 @@ class WalletStream:
             }
         )
 
-    def read_stream(self):
+    def read_stream(self) -> None:
         """
-        Reads data from the stream and writes it to the balance class attribute.
+        Reads data from the stream and writes it to the balance
+        class attribute.
         """
         message = self.client.stream_read()
         try:
             if message["command"] == "balance":
-                self.balance = np.fromiter(message["data"].values(), dtype=float)
-        except:
+                self.balance = np.fromiter(
+                    message["data"].values(), dtype=float
+                )
+        except Exception:
             # skip if there is no portfolio balance data in the stream
             pass
 
-    def stream(self):
+    def stream(self) -> None:
         """
         Begins subscriptions and continuous stream data reading.
         """
@@ -63,15 +68,18 @@ class PositionObservator:
     price of the concluded position
 
     Args:
-        client (Client): The API client object associated with the PositionObservator.
+        client (XTBClient): The API client object associated with the
+            PositionObservator.
         symbol (str): The symbol associated with the PObservator.
         order_no (int): The order number associated with the PObservator.
 
     Attributes:
         logging: The logger object for recording observations.
-        client (Client): The API client object associated with the PositionObservator.
+        client (XTBClient): The API client object associated with the
+            PositionObservator.
         symbol (str): The symbol associated with the PositionObservator.
-        order_no (int): The order number associated with the PositionObservator.
+        order_no (int): The order number associated with the
+            PositionObservator.
         current_price: An array to store the current price observations.
         profit: The profit associated with the PositionObservator.
         minute_1: An array to store candles at 1-minute intervals.
@@ -83,9 +91,7 @@ class PositionObservator:
             using a 15-box method.
     """
 
-    def __init__(
-        self, client: Client = None, symbol: str = None, order_no: int = None
-    ) -> None:
+    def __init__(self, client: XTBClient, symbol: str, order_no: int) -> None:
         self.logging = setup_logger(
             f"{symbol}-{order_no}", "obs_logger.log", print_logs=False
         )
@@ -93,7 +99,7 @@ class PositionObservator:
         self.symbol = symbol
         self.order_no = order_no
         self.curent_price = np.empty(shape=[0, 11])
-        self.profit = None
+        self.profit: float
         self.minute_1 = np.empty(shape=[0, 7])
         self.minute_5 = np.empty(shape=[0, 7])
         self.minute_15 = np.empty(shape=[0, 7])
@@ -102,9 +108,9 @@ class PositionObservator:
 
     def subscribe(self):
         """
-        Subscribes to candles, tick price and profits data for obtaining stream data from api.
+        Subscribes to candles, tick price and profits data for obtaining
+        stream data from api.
         """
-
         self.client.stream_send(
             {
                 "command": "getCandles",
@@ -130,16 +136,16 @@ class PositionObservator:
         """
         Reads data from the stream and writes it to the class attributes.
         """
-
         message = self.client.stream_read()
         if message["command"] == "tickPrices":
-            # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
+            # 'ask','bid','high','low','askVolume','bidVolume',
+            # 'timestamp','level','quoteId','spreadTable','spreadRaw'
             dictor = message["data"]
             if dictor["symbol"] == self.symbol:
                 dictor.pop("symbol")
-                self.curent_price = np.fromiter(dictor.values(), dtype=float).reshape(
-                    1, 11
-                )
+                self.curent_price = np.fromiter(
+                    dictor.values(), dtype=float
+                ).reshape(1, 11)
         if message["command"] == "profit":
             dictor = message["data"]
             if dictor["order2"] == self.order_no:
@@ -150,14 +156,17 @@ class PositionObservator:
             if dictor["symbol"] == self.symbol:
                 dictor.pop("ctmString")
                 dictor.pop("symbol")
-                self.minute_1 = np.fromiter(dictor.values(), dtype=float).reshape(1, 7)
-                self.minute_1_5box = np.vstack([self.minute_1_5box, self.minute_1])
+                self.minute_1 = np.fromiter(
+                    dictor.values(), dtype=float
+                ).reshape(1, 7)
+                self.minute_1_5box = np.vstack(
+                    [self.minute_1_5box, self.minute_1]
+                )
 
     def make_more_candles(self):
         """
         Aggregates candles to a higher interval
         """
-
         if np.shape(self.minute_1_5box)[0] == 5:
             self.minute_5 = np.array(
                 [
@@ -173,7 +182,9 @@ class PositionObservator:
                 ]
             )
             self.minute_1_5box = np.empty(shape=[0, 7])
-            self.minute_5_15box = np.vstack([self.minute_5_15box, self.minute_5])
+            self.minute_5_15box = np.vstack(
+                [self.minute_5_15box, self.minute_5]
+            )
 
         if np.shape(self.minute_5_15box)[0] == 3:
             self.minute_15 = np.array(
@@ -218,11 +229,11 @@ class DataStream:
     """
 
     def __init__(self, symbol: str):
-        self.client = Client("DEMO")
+        self.client = XTBClient("DEMO")
         self.symbol = symbol
         self.server_time = None
-        self.tick_msg = None
-        self.candle_msg = None
+        self.tick_msg: dict[str, Any] = {}
+        self.candle_msg: dict[str, Any] = {}
         self.symbols_price = np.empty(shape=[0, 11])
         self.symbols_last_1M = np.empty(shape=[0, 7])
         self.stream_logger = setup_logger(
@@ -233,9 +244,9 @@ class DataStream:
 
     def subscribe(self):
         """
-        Subscribes to tick price and candles data for obtaining stream data from api.
+        Subscribes to tick price and candles data for obtaining stream
+        data from api.
         """
-
         self.client.stream_send(
             {
                 "command": "getTickPrices",
@@ -253,9 +264,9 @@ class DataStream:
 
     def read_stream_messages(self):
         """
-        Reads data from the stream and writes it to the class attributes (candle or tick).
+        Reads data from the stream and writes it to the class attributes
+        (candle or tick).
         """
-
         while self.client.connection_stream is True:
             message = self.client.stream_read()
             if message["command"] == "tickPrices":
@@ -267,23 +278,22 @@ class DataStream:
         """
         Aggregates price msg.
         """
-
         while self.client.connection_stream is True:
             try:
                 dictor = self.tick_msg["data"]
-                # 'ask','bid','high','low','askVolume','bidVolume','timestamp','level','quoteId','spreadTable','spreadRaw'
+                # 'ask','bid','high','low','askVolume','bidVolume',
+                # 'timestamp','level','quoteId','spreadTable','spreadRaw'
                 dictor.pop("symbol")
-                self.symbols_price = np.fromiter(dictor.values(), dtype=float).reshape(
-                    1, 11
-                )
-            except:
+                self.symbols_price = np.fromiter(
+                    dictor.values(), dtype=float
+                ).reshape(1, 11)
+            except Exception:
                 sleep(0.5)
 
     def read_last_1M(self):
         """
         Aggregates candles msg.
         """
-
         while self.client.connection_stream is True:
             try:
                 dictor = self.candle_msg["data"]
@@ -293,8 +303,7 @@ class DataStream:
                 self.symbols_last_1M = np.fromiter(
                     dictor.values(), dtype=float
                 ).reshape(1, 6)
-
-            except:
+            except Exception:
                 sleep(1)
 
     def stream_read(self):
@@ -306,11 +315,10 @@ class DataStream:
 
     def run(self):
         """
-        Data subscraptions, and threads for reading messages from the stream
-        and aggregating them into prices and candles to minimize the probability
-        of lost messages
+        Data subscraptions, and threads for reading messages from
+        the stream and aggregating them into prices and candles to
+        minimize the probability of lost messages.
         """
-
         self.client.open_session()
         self.subscribe()
         thread_read = Thread(target=self.stream_read, args=())
@@ -319,11 +327,11 @@ class DataStream:
 
         thread_read.start()
         while True:
-            if self.candle_msg is None and self.tick_msg is None:
+            if not self.candle_msg and not self.tick_msg:
                 sleep(1)
             else:
                 break
-        print("started")
+        print("started")  # FIXME: make some loger
         thread_prices.start()
         thread_candles.start()
 

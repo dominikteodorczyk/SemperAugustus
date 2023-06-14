@@ -4,13 +4,13 @@ Module containing models that make decisions based on trend.
 
 from threading import Thread
 from time import sleep
+from typing import Any
 import numpy as np
-from api.client import Client
+from api.client import XTBClient
 from api.commands import get_historical_candles
 
 
-
-class MovingAVG():
+class MovingAVG:
     """
     Class representing moving average calculations for a given symbol.
 
@@ -21,26 +21,30 @@ class MovingAVG():
             to 1 (based on 1-minutes candles).
 
     Attributes:
-        client (Client): An instance of the Client class for making API calls.
+        client (XTBClient): An instance of the XTBClient class for
+            making API calls.
         symbol (str): The symbol for which Moving Average calculations
             are performed.
         period (int): The period of Moving Average.
         base_data: Placeholder for storing the base data.
         means: Array for storing the calculated moving averages.
         mean: Array for storing the latest moving average.
-        last_1M_candle: Array for storing the data of the last 1-minute candle.
+        last_1M_candle: Array for storing the data of the last
+            1-minute candle.
         signal: The generated signal based on Moving Average calculations.
     """
 
     def __init__(self, symbol: str, period: int = 1) -> None:
-        self.client = Client("DEMO")
+        self.client = XTBClient("DEMO")
         self.symbol = symbol
         self.period = period
-        self.base_data = None
+        self.base_data: np.ndarray[Any, np.dtype[Any]] = np.array([])
         self.means = np.empty(shape=[0, 5])
         self.mean = np.empty(shape=[0, 5])
         self.last_1M_candle = np.empty(shape=[1, 6])
-        self.signal = None
+        self.signal: int = 20  # number outside the pool of orders but meeting
+        # the requirements of the specified type of variables (zero is the
+        # type of order)
 
     def get_means(self):
         """
@@ -73,7 +77,9 @@ class MovingAVG():
                 pass
             else:
                 self.last_1M_candle = symbol_data.symbols_last_1M
-                self.base_data = np.vstack([self.base_data, self.last_1M_candle])
+                self.base_data = np.vstack(
+                    [self.base_data, self.last_1M_candle]
+                )
                 self.base_data = self.base_data[-60:, :]
                 try:
                     self.get_means()
@@ -81,17 +87,21 @@ class MovingAVG():
                         self.signal = 0
                     if self.mean[4] < self.mean[3]:
                         self.signal = 1
-                except:
+                except Exception:
                     pass
             sleep(1)
 
     def run(self, symbol_data):
         """
-        A method that runs the model's work along with downloading historical data.
+        A method that runs the model's work along with downloading
+        historical data.
         """
         self.client.open_session()
         self.base_data = get_historical_candles(
-            client=self.client, symbol=self.symbol, shift=60, period=self.period
+            client=self.client,
+            symbol=self.symbol,
+            shift=60,
+            period=self.period,
         )
         read_thread = Thread(target=self.market_observe, args=(symbol_data,))
         read_thread.start()

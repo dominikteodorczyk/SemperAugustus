@@ -1,11 +1,12 @@
 """
-The module allows you to run a trading session with the use of an entry model
-and an exit model.
+The module allows you to run a trading session with the use of an
+entry model and an exit model.
 """
 
 from time import sleep
+from typing import Any
 from threading import Thread
-from api.client import Client
+from api.client import XTBClient
 from api.commands import buy_transaction, sell_transaction
 from api.streamtools import DataStream
 from models.close_signals import DefaultCloseSignal
@@ -15,40 +16,49 @@ from utils.wallet import Wallet
 from utils.controlling import AssetTechnicalController
 
 
-
-class TradingSession():
+class TradingSession:
     """
-    Trading session object supporting multi-threaded monitoring of portfolio risk,
-    technical aspects of the session and trading slot pools for defined symbols.
+    Trading session object supporting multi-threaded monitoring of
+    portfolio risk, technical aspects of the session and trading slot
+    pools for defined symbols.
 
     Args:
-        symbols (list): A list of symbols associated with the trading session.
+        symbols (list): A list of symbols associated with the trading
+            session.
 
     Attributes:
-        symbols (list): A list of symbols associated with the trading session.
-        wallet: The wallet object for managing the session's portfolio. Init object
-            with risk data and portfolio management (functionality under development).
-        session_control: The session technical controller object for managing
-            technical aspects of the session such as spread, volume levels,
-            volatility (functionality under development).
+        symbols (list): A list of symbols associated with the trading
+            session.
+        wallet: The wallet object for managing the session's portfolio.
+            Init object with risk data and portfolio management
+            (functionality under development).
+        session_control: The session technical controller object for
+            managing technical aspects of the session such as spread,
+            volume levels, volatility (functionality under development).
         trading_pool: The trading pool object for all symbols in the session.
     """
 
-    def __init__(self, symbols: list) -> None:
+    def __init__(self, symbols: list[str]) -> None:
         self.symbols = symbols
         self.wallet = Wallet()
-        self.session_control = AssetTechnicalController(symbol='symbols') #FIXME: to change in the future
+        self.session_control = AssetTechnicalController(
+            symbol="symbols"
+        )  # FIXME: to change in the future
         self.trading_pool = TradingPool(symbols=symbols)
 
     def session_init(self):
         """
-        Initialization of threads for the risk manager, session controller and trading pool
+        Initialization of threads for the risk manager, session controller
+        and trading pool.
         """
 
         wallet_thread = Thread(target=self.wallet.run, args=())
-        session_control_thread = Thread(target=self.session_control.run, args=())
+        session_control_thread = Thread(
+            target=self.session_control.run, args=()
+        )
         trading_pool_thread = Thread(
-            target=self.trading_pool.run_pool, args=(self.wallet, self.session_control)
+            target=self.trading_pool.run_pool,
+            args=(self.wallet, self.session_control),
         )
 
         wallet_thread.start()
@@ -60,7 +70,7 @@ class TradingSession():
         trading_pool_thread.join()
 
 
-class TradingPool():
+class TradingPool:
     """
     Facility that manages the slots of individual trading symbols
 
@@ -75,7 +85,8 @@ class TradingPool():
                 and sessions - Market Maker's work efficiency
                 (functionality in plans)
     """
-    def __init__(self, symbols:list) -> None:
+
+    def __init__(self, symbols: list[str]) -> None:
         self.symbols = symbols
         self.risk_data = None
         self.session_data = None
@@ -109,7 +120,7 @@ class TradingPool():
             slot.join()
 
 
-class TradingSlot():
+class TradingSlot:
     """
     Trading slot object for the selected symbol. The running slot
     supports a thread of streaming data about the given symbol
@@ -124,7 +135,7 @@ class TradingSlot():
         symbol_data: The data stream object for the symbol.
     """
 
-    def __init__(self, symbol:str) -> None:
+    def __init__(self, symbol: str) -> None:
         self.symbol = symbol
         # Data stream of the symbol
         self.symbol_data = DataStream(symbol=self.symbol)
@@ -162,7 +173,7 @@ class TradingSlot():
         position_thread.join()
 
 
-class Trader():
+class Trader:
     """
     Represents a trader for a specific symbol.
 
@@ -174,6 +185,7 @@ class Trader():
         buy_model (MovingAVG): The moving average model used for
             buying decisions.
     """
+
     def __init__(self, symbol) -> None:
         self.symbol = symbol
         self.buy_model = MovingAVG(symbol=symbol, period=1)
@@ -211,14 +223,16 @@ class Trader():
                 (functionality in plans)
         """
 
-        buy_model_thread = Thread(target=self.buy_model.run, args=(symbol_data,))
+        buy_model_thread = Thread(
+            target=self.buy_model.run, args=(symbol_data,)
+        )
         position_thread = Thread(target=self.open_position, args=())
         buy_model_thread.start()
 
         # block holding the conclusion of the position until the data is
         # calculated by the purchasing model
         while True:
-            if self.buy_model.signal is None:
+            if self.buy_model.signal == 20:
                 sleep(1)
             else:
                 break
@@ -228,7 +242,7 @@ class Trader():
         position_thread.join()
 
 
-class Position():
+class Position:
     """
     Represents a trading position.
 
@@ -255,10 +269,10 @@ class Position():
         cmd: int,
         symbol: str,
         volume: float = 0.01,
-        close_signal: object = DefaultCloseSignal(),
+        close_signal=DefaultCloseSignal(),
     ):
-        self.client = Client("DEMO")
-        self.order = None
+        self.client = XTBClient("DEMO")
+        self.order: dict[str, Any] = {}
         self.cmd = cmd
         self.symbol = symbol
         self.volume = volume
@@ -281,13 +295,14 @@ class Position():
             self.order = sell_transaction(
                 client=self.client, symbol=self.symbol, volume=self.volume
             )
-        #Combination of sl_start parameter (percentage value of position rate)
+        # Combination of sl_start parameter
+        # (percentage value of position rate)
         self.close_signal.set_params(
-                client=self.client, position_data=self.order, sl_start=1.5
-            )
+            client=self.client, position_data=self.order, sl_start=1.5
+        )
         self.close_signal.run()
         profit = self.close_signal.closedata["profit"]
         self.logging.info(
-            f'{self.order["order_no"]} CLOSED WITH PROFIT: {profit}'
+            f'{self.order.get("order_no", 0)} CLOSED WITH PROFIT: {profit}'
         )
         self.client.close_session()

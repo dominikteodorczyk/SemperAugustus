@@ -3,8 +3,7 @@ Module that controls the session and technical parameters of the value.
 """
 
 
-
-class AssetTechnicalController():
+class AssetTechnicalController:
     """
     Manages the technical aspects of a trading session. The facility monitors
     liquidity and spreads on a given currency to catch probable malfunctions
@@ -18,9 +17,8 @@ class AssetTechnicalController():
         symbol (str): A symbol associated with the session.
     """
 
-    def __init__(self, symbol:str) -> None:
+    def __init__(self, symbol: str) -> None:
         self.symbol = symbol
 
     def run(self):
         pass
-

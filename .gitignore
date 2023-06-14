@@ -131,6 +131,7 @@ src/*.txt
 
 #user choice
 docs/*.docx
-docs/*.pdf 
+docs/*.pdf
 *.ipynb
 .vscode
+.black

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 
 
-class UserDEMO():
+class XTBUserDEMO():
     """A class representing a user for XTB demo account.
 
     Attributes:
@@ -36,13 +36,13 @@ class UserDEMO():
         self.login = getenv('XTB_LOGIN_DEMO')
         self.password = getenv('XTB_PASSWORD_DEMO')
         self.host = getenv('XTB_HOST_DEMO')
-        self.main_port = int(getenv('XTB_MAIN_PORT_DEMO'))
-        self.streaming_port = int(getenv('XTB_STREAMING_PORT_DEMO'))
+        self.main_port = int(getenv('XTB_MAIN_PORT_DEMO', 'O'))
+        self.streaming_port = int(getenv('XTB_STREAMING_PORT_DEMO', 'O'))
         self.websocket = getenv('XTB_WEBSOCKET_DEMO')
         self.websocket_streaming_port = getenv('XTB_WEBSOCKET_STREAMING_PORT_DEMO')
 
 
-class UserREAL():
+class XTBUserREAL():
     """
     UserREAL class represents a user for XTB real trading. It provides the necessary
     credentials and connection information to interact with the XTB API in the
@@ -68,8 +68,8 @@ class UserREAL():
         self.login = getenv('XTB_LOGIN_REAL')
         self.password = getenv('XTB_PASSWORD_REAL')
         self.host = getenv('XTB_HOST_REAL')
-        self.main_port = int(getenv('XTB_MAIN_PORT_REAL'))
-        self.streaming_port = int(getenv('XTB_STREAMING_PORT_REAL'))
+        self.main_port = int(getenv('XTB_MAIN_PORT_REAL', 'O'))
+        self.streaming_port = int(getenv('XTB_STREAMING_PORT_REAL', 'O'))
         self.websocket = getenv('XTB_WEBSKOCET_REAL')
         self.websocket_streaming_port = getenv('XTB_WEBSOCKET_STRAMING_PORT_REAL')
 
@@ -85,6 +85,6 @@ class LoggerPaths():
         load_dotenv(verbose=True)
         log_path = getenv('DEF_LOG_PATH')
         # src_path = path.join(path.dirname(__file__), "src")
-        self.log_path = path.join(path.dirname(__file__), getenv('DEF_LOG_PATH'))
+        self.log_path = path.join(path.dirname(__file__), getenv('DEF_LOG_PATH', 'O'))
         if not path.exists(self.log_path):
             makedirs(self.log_path)
