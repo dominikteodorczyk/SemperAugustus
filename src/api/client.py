@@ -138,7 +138,7 @@ class XTBClient:
 
     def send_n_return(
         self, packet: dict[Any, Any]
-    ) -> dict[str, Union[int, float, str, bool]]:
+    ) -> dict[Union[str, int], Union[int, float, str, bool, list[Any]]]:
         """
         Sends a JSON-encoded packet through the connection socket and returns
         the response.
@@ -153,7 +153,9 @@ class XTBClient:
         message: bytes = json.dumps(packet).encode("utf-8")
         received_data: str = ""
         sent: int = 0
-        response: dict[str, Union[int, float, str, bool]]
+        response: dict[
+            Union[str, int], Union[int, float, str, bool, list[Any]]
+        ]
         while sent < len(message):
             sent += self.socket_connection.send(message[sent:])
         while True:
