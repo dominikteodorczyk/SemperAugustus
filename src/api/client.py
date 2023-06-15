@@ -137,7 +137,7 @@ class XTBClient:
             self.connection_stream = True
 
     def send_n_return(
-        self, packet: dict[Any, Any]
+        self, packet: dict[str, Any]
     ) -> dict[Union[str, int], Union[int, float, str, bool, list[Any]]]:
         """
         Sends a JSON-encoded packet through the connection socket and returns
