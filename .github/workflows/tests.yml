@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-pip
+
       - name: Create .env file
         env:
           ENV_CONTENTS: ${{ secrets.ENV_VAR }}
