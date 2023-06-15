@@ -49,6 +49,7 @@ class Test_XTBClient:
         APIobject.connect()
         connection = True
         peer_port = XTBUserDEMO().main_port
+        print(APIobject.connection)
 
         assert APIobject.socket_connection.getpeername()[1] == peer_port
         assert APIobject.connection is connection

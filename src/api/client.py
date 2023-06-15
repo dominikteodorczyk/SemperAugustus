@@ -239,7 +239,7 @@ class XTBClient:
             )
         else:
             self.login_status = False
-            self.logging.error("Not logged")
+            self.logging.error(f"Not logged, status is: {result['status']}")
 
     def logout(self):
         """
