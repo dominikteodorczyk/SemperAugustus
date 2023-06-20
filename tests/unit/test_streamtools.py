@@ -131,13 +131,16 @@ class Test_PositionObservator:
         yield client
 
     @pytest.fixture
-    def event_symbol(self):
-        return "EURUSD"
+    def event_client(self):
+        return XTBClient("DEMO")
 
     @pytest.fixture
     def event_order_no(self):
         return 100000
 
+    @pytest.fixture
+    def event_symbol(self):
+        return "EURUSD"
 
     # @pytest.mark.parametrize(
     #     "atribut, expected",
@@ -179,3 +182,40 @@ class Test_PositionObservator:
             hasattr(PositionObservator(
               client=client, symbol=event_symbol, order_no=event_order_no), atribut) is True
         )
+
+    @pytest.mark.parametrize(
+        "atribut, expected",
+        [
+            ("symbol", "EURUSD"),
+            ("order_no", 100000),
+            ("profit", 0.0)]
+    )
+    def test_PositionObservator_have_values_of_attribut_after_init(self, event_client, atribut, expected):
+        # test to check default attribute values after initialization
+        client = event_client
+        assert (
+            PositionObservator(
+                client=client, symbol="EURUSD", order_no=100000).__getattribute__(
+                    atribut) == expected
+        )# should be the same
+
+    @pytest.mark.parametrize(
+        "atribut, expected",
+        [
+            ("curent_price",  np.empty(shape=[0, 11])),
+            ("minute_1", np.empty(shape=[0, 7])),
+            ("minute_5", np.empty(shape=[0, 7])),
+            ("minute_15", np.empty(shape=[0, 7])),
+            ("minute_1_5box", np.empty(shape=[0, 7])),
+            ("minute_5_15box", np.empty(shape=[0, 7]))]
+    )
+    def test_PositionObservator_have_values_of_matrix_attributs_after_init(self, event_client, atribut, expected):
+        # test to check default attribute values after initialization
+        client = event_client
+        assert (np.array_equal(PositionObservator(
+                client=client, symbol="EURUSD", order_no=100000).__getattribute__(
+                    atribut), expected)
+        )# should be the same
+
+    def test_read_stream_writing_price_msg_to_curent_price_strib(self,mock_xtb_client):
+
