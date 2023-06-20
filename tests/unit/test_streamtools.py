@@ -260,3 +260,31 @@ class Test_PositionObservator:
         # Checking whether the curent price stream message was processed correctly
         expected_curent_price = np.empty(shape=[0, 11])
         assert np.array_equal(position_obs.curent_price, expected_curent_price)
+
+    def test_read_stream_not_writing_profit_msg_to_profit_atrib(self,mock_xtb_client):
+        # the test checks whether the stream information about not the current profit of a stock
+        # is not assigned to the profit attribute
+        position_obs = PositionObservator(client=XTBClient("DEMO"), symbol="EURUSD", order_no=100000)
+        position_obs.client = mock_xtb_client
+        # Preparing data to be returned by the mock XTBClient.stream_read method
+        mock_message = {
+            "command": "candle",
+            "data": {
+                "close": 4.1849,
+                "ctm": 1378369375000,
+                "ctmString": "Sep 05, 2013 10:22:55 AM",
+                "high": 4.1854,
+                "low": 4.1848,
+                "open": 4.1848,
+                "quoteId": 2,
+                "symbol": "EURUSD",
+                "vol": 0.0
+            }
+        }
+        # Setting the behavior of mock XTBClient.read_stream
+        position_obs.client.stream_read.return_value = mock_message
+        # Calling the read_stream method
+        position_obs.read_stream()
+        # Checking whether the  stream message was processed correctly
+        expected_profit = 0.0
+        assert np.array_equal(position_obs.profit, expected_profit)
