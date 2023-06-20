@@ -8,6 +8,7 @@ import numpy as np
 from typing import Any
 from api.client import XTBClient
 from utils.technical import setup_logger
+import logging
 
 
 class WalletStream:
@@ -23,8 +24,8 @@ class WalletStream:
         balance: The balance of the wallet.
     """
 
-    def __init__(self, client: XTBClient) -> None:
-        self.client = client
+    def __init__(self) -> None:
+        self.client = XTBClient('DEMO')
         self.balance: np.ndarray[Any, np.dtype[Any]] = np.array([])
 
     def subscribe(self) -> None:
@@ -57,6 +58,7 @@ class WalletStream:
         """
         Begins subscriptions and continuous stream data reading.
         """
+        self.client.open_session()
         self.subscribe()
         while self.client.connection_stream is True:
             self.read_stream()
@@ -99,7 +101,7 @@ class PositionObservator:
         self.symbol = symbol
         self.order_no = order_no
         self.curent_price = np.empty(shape=[0, 11])
-        self.profit: float
+        self.profit: float = 0.0
         self.minute_1 = np.empty(shape=[0, 7])
         self.minute_5 = np.empty(shape=[0, 7])
         self.minute_15 = np.empty(shape=[0, 7])
