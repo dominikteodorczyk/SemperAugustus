@@ -3,12 +3,12 @@ Data streaming tools
 """
 
 from threading import Thread
+from copy import copy
 from time import sleep
 import numpy as np
 from typing import Any
 from api.client import XTBClient
 from utils.technical import setup_logger
-import logging
 
 
 class WalletStream:
@@ -142,18 +142,18 @@ class PositionObservator:
         if message["command"] == "tickPrices":
             # 'ask','bid','high','low','askVolume','bidVolume',
             # 'timestamp','level','quoteId','spreadTable','spreadRaw'
-            dictor = message["data"]
+            dictor = copy(message["data"])
             if dictor["symbol"] == self.symbol:
                 dictor.pop("symbol")
                 self.curent_price = np.fromiter(
                     dictor.values(), dtype=float
                 ).reshape(1, 11)
         if message["command"] == "profit":
-            dictor = message["data"]
+            dictor = copy(message["data"])
             if dictor["order2"] == self.order_no:
                 self.profit = dictor["profit"]
         if message["command"] == "candle":
-            dictor = message["data"]
+            dictor = copy(message["data"])
             # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
             if dictor["symbol"] == self.symbol:
                 dictor.pop("ctmString")
