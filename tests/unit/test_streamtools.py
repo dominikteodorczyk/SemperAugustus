@@ -234,6 +234,38 @@ class Test_PositionObservator:
         )
 
     @pytest.fixture
+    def candle_array_5_minutes(self):
+        return np.array(
+            [
+                [
+                    4.1849,
+                    1378369375000,
+                    4.1854,
+                    4.1848,
+                    4.1848,
+                    10,
+                    0.0,
+                ]
+            ]
+        )
+
+    @pytest.fixture
+    def candle_array_15_minutes(self):
+        return np.array(
+            [
+                [
+                    4.1849,
+                    1378369375000,
+                    4.1854,
+                    4.1848,
+                    4.1848,
+                    30,
+                    0.0,
+                ]
+            ]
+        )
+
+    @pytest.fixture
     def profit_msg(self, event_order_no):
         return {
             "command": "profit",
@@ -422,3 +454,56 @@ class Test_PositionObservator:
             mock_position_obs.read_stream()
             mock_position_obs.make_more_candles()
         assert np.shape(mock_position_obs.minute_1_5box)[0] == 0
+
+    def test_make_more_candles_calc_right_5_min_candle(
+        self, mock_position_obs, candle_msg, candle_array_5_minutes
+    ):
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        for i in range(5):
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.array_equal(mock_position_obs.minute_5, candle_array_5_minutes)
+
+    @pytest.mark.parametrize(
+        "M1_candles_no, expected_minute_5_15box_shape",
+        [
+            (4, 0),
+            (9, 1),
+            (14, 2)
+        ]
+    )
+    def test_make_more_candles_agregate_5M_candles_to_minute_5_15box(
+        self, mock_position_obs, candle_msg, M1_candles_no, expected_minute_5_15box_shape
+    ):
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        for i in range(M1_candles_no):
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.shape(mock_position_obs.minute_5_15box)[0] == expected_minute_5_15box_shape
+
+    def test_make_more_candles_after_three_5M_candles_delete_minute_5_15box(
+        self, mock_position_obs, candle_msg
+    ):
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        for i in range(15):
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.shape(mock_position_obs.minute_5_15box)[0] == 0
+
+    def test_make_more_candles_after_three_5M_make_minute_15_candle(
+        self, mock_position_obs, candle_msg
+    ):
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        for i in range(15):
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.shape(mock_position_obs.minute_15)[0] == 1
+
+    def test_make_more_candles_agregate_minute_15_candle_right(
+        self, mock_position_obs, candle_msg, candle_array_15_minutes
+    ):
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        for i in range(15):
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.array_equal(mock_position_obs.minute_15, candle_array_15_minutes)
