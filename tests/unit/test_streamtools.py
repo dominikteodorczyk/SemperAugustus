@@ -432,3 +432,15 @@ class Test_PositionObservator:
             position_obs.read_stream()
             position_obs.make_more_candles()
         assert np.shape(position_obs.minute_5)[0] == 1
+
+    def test_make_more_candles_after_five_1M_candles_minute_1_5box_is_empty(
+        self, mock_xtb_client, candle_msg
+    ):
+        position_obs = PositionObservator(
+            client=mock_xtb_client, symbol="EURUSD", order_no=100000
+        )
+        position_obs.client.stream_read.return_value = candle_msg
+        for i in range(5):
+            position_obs.read_stream()
+            position_obs.make_more_candles()
+        assert np.shape(position_obs.minute_1_5box)[0] == 0
