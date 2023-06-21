@@ -3,11 +3,10 @@ Check the XTBClient of XTB API is valid.
 """
 
 import pytest
-import itertools
 from unittest.mock import MagicMock
 import numpy as np
 from api.client import XTBClient, stream_session_simulator
-from api.streamtools import WalletStream, PositionObservator
+from api.streamtools import WalletStream, PositionObservator, DataStream
 
 
 class Test_WalletStream:
@@ -70,7 +69,8 @@ class Test_WalletStream:
         # Creating a WalletStream instance with a mock XTBClient
         wallet_stream = WalletStream()
         wallet_stream.client = mock_xtb_client
-        # Preparing data to be returned by the mock XTBClient.stream_read method
+        # Preparing data to be returned by the mock
+        # XTBClient.stream_read method
         mock_message = {
             "command": "balance",
             "data": {
@@ -114,7 +114,8 @@ class Test_WalletStream:
         # Creating a WalletStream instance with a mock XTBClient
         wallet_stream = WalletStream()
         wallet_stream.client = mock_xtb_client
-        # Preparing data to be returned by the mock XTBClient.stream_read method
+        # Preparing data to be returned by the mock
+        # XTBClient.stream_read method
         mock_message = {
             "command": "candle",
             "data": {
@@ -160,8 +161,11 @@ class Test_PositionObservator:
     @pytest.fixture
     def mock_position_obs(self, mock_xtb_client, event_order_no, event_symbol):
         return PositionObservator(
-            client=mock_xtb_client, symbol=event_symbol, order_no=event_order_no
+            client=mock_xtb_client,
+            symbol=event_symbol,
+            order_no=event_order_no,
         )
+
     @pytest.fixture
     def price_msg(self):
         return {
@@ -185,19 +189,21 @@ class Test_PositionObservator:
     @pytest.fixture
     def price_array(self):
         return np.array(
-            [[
-                4000.0,
-                15000,
-                4000.0,
-                16000,
-                4000.0,
-                0,
-                3500.0,
-                0,
-                0.000003,
-                0.00042,
-                1272529161605,
-            ]]
+            [
+                [
+                    4000.0,
+                    15000,
+                    4000.0,
+                    16000,
+                    4000.0,
+                    0,
+                    3500.0,
+                    0,
+                    0.000003,
+                    0.00042,
+                    1272529161605,
+                ]
+            ]
         )
 
     @pytest.fixture
@@ -273,8 +279,8 @@ class Test_PositionObservator:
                 "order": 7497776,
                 "order2": event_order_no,
                 "position": 7497776,
-                "profit": 7076.52
-            }
+                "profit": 7076.52,
+            },
         }
 
     @pytest.fixture
@@ -296,7 +302,7 @@ class Test_PositionObservator:
             "minute_5_15box",
         ],
     )
-    def test_PositionObservator_have_attribut(
+    def test_PositionObservator_have_right_client_attribut(
         self, event_symbol, event_order_no, atribut
     ):
         # A test to see if a class object, when initialized, has a set of
@@ -363,7 +369,9 @@ class Test_PositionObservator:
         mock_position_obs.client.stream_read.return_value = price_msg
         mock_position_obs.read_stream()
         expected_curent_price = price_array
-        assert np.array_equal(mock_position_obs.curent_price, expected_curent_price)
+        assert np.array_equal(
+            mock_position_obs.curent_price, expected_curent_price
+        )
 
     def test_read_stream_is_not_writing_candle_msg_to_curent_price_atrib(
         self, mock_position_obs, candle_msg
@@ -375,7 +383,9 @@ class Test_PositionObservator:
         mock_position_obs.client.stream_read.return_value = candle_msg
         mock_position_obs.read_stream()
         expected_curent_price = np.empty(shape=[0, 11])
-        assert np.array_equal(mock_position_obs.curent_price, expected_curent_price)
+        assert np.array_equal(
+            mock_position_obs.curent_price, expected_curent_price
+        )
 
     def test_read_stream_writing_profit_msg_to_profit_atrib(
         self, mock_position_obs, profit_msg, profit
@@ -422,20 +432,22 @@ class Test_PositionObservator:
         assert np.array_equal(mock_position_obs.minute_1, expected_minute_1)
 
     @pytest.mark.parametrize(
-        "M1_candles_no, expected_minute_1_5box_shape",
-        [
-            (1, 1),
-            (2, 2),
-            (3, 3)
-        ]
+        "M1_candles_no, expected_minute_1_5box_shape", [(1, 1), (2, 2), (3, 3)]
     )
     def test_make_more_candles_agregate_1M_candles_to_minute_1_5box(
-        self, mock_position_obs, candle_msg, M1_candles_no, expected_minute_1_5box_shape
+        self,
+        mock_position_obs,
+        candle_msg,
+        M1_candles_no,
+        expected_minute_1_5box_shape,
     ):
         mock_position_obs.client.stream_read.return_value = candle_msg
         for i in range(M1_candles_no):
             mock_position_obs.read_stream()
-        assert np.shape(mock_position_obs.minute_1_5box)[0] == expected_minute_1_5box_shape
+        assert (
+            np.shape(mock_position_obs.minute_1_5box)[0]
+            == expected_minute_1_5box_shape
+        )
 
     def test_make_more_candles_five_1M_candles_make_minute_5_candle(
         self, mock_position_obs, candle_msg
@@ -462,24 +474,29 @@ class Test_PositionObservator:
         for i in range(5):
             mock_position_obs.read_stream()
             mock_position_obs.make_more_candles()
-        assert np.array_equal(mock_position_obs.minute_5, candle_array_5_minutes)
+        assert np.array_equal(
+            mock_position_obs.minute_5, candle_array_5_minutes
+        )
 
     @pytest.mark.parametrize(
         "M1_candles_no, expected_minute_5_15box_shape",
-        [
-            (4, 0),
-            (9, 1),
-            (14, 2)
-        ]
+        [(4, 0), (9, 1), (14, 2)],
     )
     def test_make_more_candles_agregate_5M_candles_to_minute_5_15box(
-        self, mock_position_obs, candle_msg, M1_candles_no, expected_minute_5_15box_shape
+        self,
+        mock_position_obs,
+        candle_msg,
+        M1_candles_no,
+        expected_minute_5_15box_shape,
     ):
         mock_position_obs.client.stream_read.return_value = candle_msg
         for i in range(M1_candles_no):
             mock_position_obs.read_stream()
             mock_position_obs.make_more_candles()
-        assert np.shape(mock_position_obs.minute_5_15box)[0] == expected_minute_5_15box_shape
+        assert (
+            np.shape(mock_position_obs.minute_5_15box)[0]
+            == expected_minute_5_15box_shape
+        )
 
     def test_make_more_candles_after_three_5M_candles_delete_minute_5_15box(
         self, mock_position_obs, candle_msg
@@ -506,4 +523,97 @@ class Test_PositionObservator:
         for i in range(15):
             mock_position_obs.read_stream()
             mock_position_obs.make_more_candles()
-        assert np.array_equal(mock_position_obs.minute_15, candle_array_15_minutes)
+        assert np.array_equal(
+            mock_position_obs.minute_15, candle_array_15_minutes
+        )
+
+class Test_DataStream:
+
+    @pytest.fixture
+    def mock_xtb_client(self):
+        # Creating a mockup for XTBClient
+        client = MagicMock()
+        yield client
+
+    @pytest.fixture
+    def event_symbol(self):
+        return "EURUSD"
+
+    @pytest.fixture
+    def mock_data_stream(self, event_symbol, mock_xtb_client):
+        data_stream = DataStream(event_symbol)
+        data_stream.client = mock_xtb_client
+        return data_stream
+
+    @pytest.fixture
+    def price_msg(self):
+        return {
+            "command": "tickPrices",
+            "data": {
+                "ask": 4000.0,
+                "askVolume": 15000,
+                "bid": 4000.0,
+                "bidVolume": 16000,
+                "high": 4000.0,
+                "level": 0,
+                "low": 3500.0,
+                "quoteId": 0,
+                "spreadRaw": 0.000003,
+                "spreadTable": 0.00042,
+                "symbol": "EURUSD",
+                "timestamp": 1272529161605,
+            },
+        }
+
+    @pytest.fixture
+    def candle_msg(self):
+        return {
+            "command": "candle",
+            "data": {
+                "close": 4.1849,
+                "ctm": 1378369375000,
+                "ctmString": "Sep 05, 2013 10:22:55 AM",
+                "high": 4.1854,
+                "low": 4.1848,
+                "open": 4.1848,
+                "quoteId": 2,
+                "symbol": "EURUSD",
+                "vol": 0.0,
+            },
+        }
+
+    @pytest.mark.parametrize(
+        "atribut",
+        [
+            "client",
+            "symbol",
+            "server_time",
+            "tick_msg",
+            "candle_msg",
+            "symbols_price",
+            "symbols_last_1M"
+        ],
+    )
+    def test_data_stream_attributes(self, mock_data_stream, atribut):
+        assert ( hasattr(mock_data_stream, atribut) is True )
+
+    @pytest.mark.parametrize(
+        "atribut, expected",
+        [
+            ("symbol","EURUSD"),
+            ("server_time",None),
+            ("tick_msg",{}),
+            ("candle_msg",{}),
+            ("symbols_price",np.empty(shape=[0, 11])),
+            ("symbols_last_1M",np.empty(shape=[0, 7]))
+        ]
+    )
+    def test_data_stream_attributes(self, mock_data_stream, atribut, expected):
+        assert np.array_equal( mock_data_stream.__getattribute__(atribut), expected)
+
+    # def test_read_stream_messages_write_candle_msg_to_right_atrib(self, mock_data_stream, candle_msg):
+    #     mock_data_stream.client.stream_read.return_value = candle_msg
+    #     mock_data_stream.read_stream_messages()
+    #     print(mock_data_stream.candle_msg)
+    #     print(mock_data_stream.client.stream_read)
+    #     assert np.array_equal(mock_data_stream.candle_msg, candle_msg)
