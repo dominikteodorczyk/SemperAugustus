@@ -158,6 +158,11 @@ class Test_PositionObservator:
         return "EURUSD"
 
     @pytest.fixture
+    def mock_position_obs(self, mock_xtb_client, event_order_no, event_symbol):
+        return PositionObservator(
+            client=mock_xtb_client, symbol=event_symbol, order_no=event_order_no
+        )
+    @pytest.fixture
     def price_msg(self):
         return {
             "command": "tickPrices",
@@ -317,90 +322,72 @@ class Test_PositionObservator:
         )  # should be the same
 
     def test_read_stream_is_writing_price_msg_to_curent_price_atrib(
-        self, mock_xtb_client, price_msg, price_array
+        self, mock_position_obs, price_msg, price_array
     ):
         """
         The test checks whether the stream information about the current
         price of a stock is assigned to the curent_price attribute
         """
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = price_msg
-        position_obs.read_stream()
+        mock_position_obs.client.stream_read.return_value = price_msg
+        mock_position_obs.read_stream()
         expected_curent_price = price_array
-        assert np.array_equal(position_obs.curent_price, expected_curent_price)
+        assert np.array_equal(mock_position_obs.curent_price, expected_curent_price)
 
     def test_read_stream_is_not_writing_candle_msg_to_curent_price_atrib(
-        self, mock_xtb_client, candle_msg
+        self, mock_position_obs, candle_msg
     ):
         """
         The test checks whether the stream information about not the current
         price of a stock is not assigned to the curent_price attribute
         """
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = candle_msg
-        position_obs.read_stream()
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        mock_position_obs.read_stream()
         expected_curent_price = np.empty(shape=[0, 11])
-        assert np.array_equal(position_obs.curent_price, expected_curent_price)
+        assert np.array_equal(mock_position_obs.curent_price, expected_curent_price)
 
     def test_read_stream_writing_profit_msg_to_profit_atrib(
-        self, mock_xtb_client, profit_msg, profit
+        self, mock_position_obs, profit_msg, profit
     ):
         """
         The test checks whether the stream information about not the current
         profit of a stock is not assigned to the profit attribute
         """
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = profit_msg
-        position_obs.read_stream()
+        mock_position_obs.client.stream_read.return_value = profit_msg
+        mock_position_obs.read_stream()
         expected_profit = profit
-        assert np.array_equal(position_obs.profit, expected_profit)
+        assert np.array_equal(mock_position_obs.profit, expected_profit)
 
     def test_read_stream_is_not_writing_candle_msg_to_profit_atrib(
-        self, mock_xtb_client, candle_msg
+        self, mock_position_obs, candle_msg
     ):
         """
         The test checks whether the stream information about not the current
         profit of a stock is not assigned to the profit attribute
         """
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = candle_msg
-        position_obs.read_stream()
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        mock_position_obs.read_stream()
         expected_profit = 0.0
-        assert np.array_equal(position_obs.profit, expected_profit)
+        assert np.array_equal(mock_position_obs.profit, expected_profit)
 
     def test_read_stream_writing_candle_msg_to_minute_1_atrib(
-        self, mock_xtb_client, candle_msg, candle_array
+        self, mock_position_obs, candle_msg, candle_array
     ):
         """
         The test checks whether the stream information about not the current
         # profit of a stock is not assigned to the profit attribute
         """
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = candle_msg
-        position_obs.read_stream()
+        mock_position_obs.client.stream_read.return_value = candle_msg
+        mock_position_obs.read_stream()
         expected_minute_1 = candle_array
-        assert np.array_equal(position_obs.minute_1, expected_minute_1)
+        assert np.array_equal(mock_position_obs.minute_1, expected_minute_1)
 
     def test_read_stream_is_not_writing_price_msg_to_minute_1_atrib(
-        self, mock_xtb_client, price_msg
+        self, mock_position_obs, price_msg
     ):
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = price_msg
-        position_obs.read_stream()
+        mock_position_obs.client.stream_read.return_value = price_msg
+        mock_position_obs.read_stream()
         expected_minute_1 = np.empty(shape=[0, 7])
-        assert np.array_equal(position_obs.minute_1, expected_minute_1)
+        assert np.array_equal(mock_position_obs.minute_1, expected_minute_1)
 
     @pytest.mark.parametrize(
         "M1_candles_no, expected_minute_1_5box_shape",
@@ -411,36 +398,27 @@ class Test_PositionObservator:
         ]
     )
     def test_make_more_candles_agregate_1M_candles_to_minute_1_5box(
-        self, mock_xtb_client, candle_msg, M1_candles_no, expected_minute_1_5box_shape
+        self, mock_position_obs, candle_msg, M1_candles_no, expected_minute_1_5box_shape
     ):
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = candle_msg
+        mock_position_obs.client.stream_read.return_value = candle_msg
         for i in range(M1_candles_no):
-            position_obs.read_stream()
-        assert np.shape(position_obs.minute_1_5box)[0] == expected_minute_1_5box_shape
+            mock_position_obs.read_stream()
+        assert np.shape(mock_position_obs.minute_1_5box)[0] == expected_minute_1_5box_shape
 
     def test_make_more_candles_five_1M_candles_make_minute_5_candle(
-        self, mock_xtb_client, candle_msg
+        self, mock_position_obs, candle_msg
     ):
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = candle_msg
+        mock_position_obs.client.stream_read.return_value = candle_msg
         for i in range(5):
-            position_obs.read_stream()
-            position_obs.make_more_candles()
-        assert np.shape(position_obs.minute_5)[0] == 1
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.shape(mock_position_obs.minute_5)[0] == 1
 
     def test_make_more_candles_after_five_1M_candles_minute_1_5box_is_empty(
-        self, mock_xtb_client, candle_msg
+        self, mock_position_obs, candle_msg
     ):
-        position_obs = PositionObservator(
-            client=mock_xtb_client, symbol="EURUSD", order_no=100000
-        )
-        position_obs.client.stream_read.return_value = candle_msg
+        mock_position_obs.client.stream_read.return_value = candle_msg
         for i in range(5):
-            position_obs.read_stream()
-            position_obs.make_more_candles()
-        assert np.shape(position_obs.minute_1_5box)[0] == 0
+            mock_position_obs.read_stream()
+            mock_position_obs.make_more_candles()
+        assert np.shape(mock_position_obs.minute_1_5box)[0] == 0
