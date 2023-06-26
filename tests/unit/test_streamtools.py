@@ -3,7 +3,8 @@ Check the XTBClient of XTB API is valid.
 """
 
 import pytest
-from unittest.mock import MagicMock
+from copy import copy
+from unittest.mock import Mock, MagicMock
 import numpy as np
 from api.client import XTBClient, stream_session_simulator
 from api.streamtools import WalletStream, PositionObservator, DataStream
@@ -527,12 +528,13 @@ class Test_PositionObservator:
             mock_position_obs.minute_15, candle_array_15_minutes
         )
 
-class Test_DataStream:
 
+class Test_DataStream:
     @pytest.fixture
     def mock_xtb_client(self):
         # Creating a mockup for XTBClient
         client = MagicMock()
+        client.connection_stream = True
         yield client
 
     @pytest.fixture
@@ -591,29 +593,35 @@ class Test_DataStream:
             "tick_msg",
             "candle_msg",
             "symbols_price",
-            "symbols_last_1M"
+            "symbols_last_1M",
         ],
     )
     def test_data_stream_attributes(self, mock_data_stream, atribut):
-        assert ( hasattr(mock_data_stream, atribut) is True )
+        assert hasattr(mock_data_stream, atribut) is True
 
     @pytest.mark.parametrize(
         "atribut, expected",
         [
-            ("symbol","EURUSD"),
-            ("server_time",None),
-            ("tick_msg",{}),
-            ("candle_msg",{}),
-            ("symbols_price",np.empty(shape=[0, 11])),
-            ("symbols_last_1M",np.empty(shape=[0, 7]))
-        ]
+            ("symbol", "EURUSD"),
+            ("server_time", None),
+            ("tick_msg", {}),
+            ("candle_msg", {}),
+            ("symbols_price", np.empty(shape=[0, 11])),
+            ("symbols_last_1M", np.empty(shape=[0, 7])),
+        ],
     )
     def test_data_stream_attributes(self, mock_data_stream, atribut, expected):
-        assert np.array_equal( mock_data_stream.__getattribute__(atribut), expected)
+        assert np.array_equal(
+            mock_data_stream.__getattribute__(atribut), expected
+        )
 
-    # def test_read_stream_messages_write_candle_msg_to_right_atrib(self, mock_data_stream, candle_msg):
-    #     mock_data_stream.client.stream_read.return_value = candle_msg
-    #     mock_data_stream.read_stream_messages()
-    #     print(mock_data_stream.candle_msg)
-    #     print(mock_data_stream.client.stream_read)
-    #     assert np.array_equal(mock_data_stream.candle_msg, candle_msg)
+    def test_read_stream_messages_write_candle_msg_to_right_atrib(
+        self, mock_data_stream, candle_msg
+    ):
+        mock_data_stream.client.connection_stream = MagicMock().mock_calls
+        mock_data_stream.client.connection_stream.side_effect = [True, False]
+        mock_data_stream.client.stream_read.return_value = candle_msg
+        mock_data_stream.read_stream_messages()
+        print(mock_data_stream.candle_msg)
+        print(mock_data_stream.client.stream_read)
+        assert np.array_equal(mock_data_stream.candle_msg, candle_msg)
