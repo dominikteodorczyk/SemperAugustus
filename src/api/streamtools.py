@@ -3,6 +3,7 @@ Data streaming tools
 """
 
 from threading import Thread
+from copy import copy
 from time import sleep
 import numpy as np
 from typing import Any
@@ -23,8 +24,8 @@ class WalletStream:
         balance: The balance of the wallet.
     """
 
-    def __init__(self, client: XTBClient) -> None:
-        self.client = client
+    def __init__(self) -> None:
+        self.client = XTBClient("DEMO")
         self.balance: np.ndarray[Any, np.dtype[Any]] = np.array([])
 
     def subscribe(self) -> None:
@@ -57,6 +58,7 @@ class WalletStream:
         """
         Begins subscriptions and continuous stream data reading.
         """
+        self.client.open_session()
         self.subscribe()
         while self.client.connection_stream is True:
             self.read_stream()
@@ -99,7 +101,7 @@ class PositionObservator:
         self.symbol = symbol
         self.order_no = order_no
         self.curent_price = np.empty(shape=[0, 11])
-        self.profit: float
+        self.profit: float = 0.0
         self.minute_1 = np.empty(shape=[0, 7])
         self.minute_5 = np.empty(shape=[0, 7])
         self.minute_15 = np.empty(shape=[0, 7])
@@ -140,18 +142,18 @@ class PositionObservator:
         if message["command"] == "tickPrices":
             # 'ask','bid','high','low','askVolume','bidVolume',
             # 'timestamp','level','quoteId','spreadTable','spreadRaw'
-            dictor = message["data"]
+            dictor = copy(message["data"])
             if dictor["symbol"] == self.symbol:
                 dictor.pop("symbol")
                 self.curent_price = np.fromiter(
                     dictor.values(), dtype=float
                 ).reshape(1, 11)
         if message["command"] == "profit":
-            dictor = message["data"]
+            dictor = copy(message["data"])
             if dictor["order2"] == self.order_no:
                 self.profit = dictor["profit"]
         if message["command"] == "candle":
-            dictor = message["data"]
+            dictor = copy(message["data"])
             # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
             if dictor["symbol"] == self.symbol:
                 dictor.pop("ctmString")
@@ -262,12 +264,23 @@ class DataStream:
             }
         )
 
+    def is_connected(self):
+        """
+        Method for env monitoring
+        """
+        # TODO: add more complete environmental monitoring
+        # than just a stream connection
+        if self.client.connection_stream is True:
+            return True
+        else:
+            return False
+
     def read_stream_messages(self):
         """
         Reads data from the stream and writes it to the class attributes
         (candle or tick).
         """
-        while self.client.connection_stream is True:
+        while self.is_connected() is True:
             message = self.client.stream_read()
             if message["command"] == "tickPrices":
                 self.tick_msg = message
@@ -278,7 +291,7 @@ class DataStream:
         """
         Aggregates price msg.
         """
-        while self.client.connection_stream is True:
+        while self.is_connected() is True:
             try:
                 dictor = self.tick_msg["data"]
                 # 'ask','bid','high','low','askVolume','bidVolume',
@@ -294,7 +307,7 @@ class DataStream:
         """
         Aggregates candles msg.
         """
-        while self.client.connection_stream is True:
+        while self.is_connected() is True:
             try:
                 dictor = self.candle_msg["data"]
                 # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
@@ -306,13 +319,6 @@ class DataStream:
             except Exception:
                 sleep(1)
 
-    def stream_read(self):
-        """
-        Initiates continuous reading of stream data.
-        """
-        while self.client.connection_stream is True:
-            self.read_stream_messages()
-
     def run(self):
         """
         Data subscraptions, and threads for reading messages from
@@ -321,7 +327,7 @@ class DataStream:
         """
         self.client.open_session()
         self.subscribe()
-        thread_read = Thread(target=self.stream_read, args=())
+        thread_read = Thread(target=self.read_stream_messages, args=())
         thread_prices = Thread(target=self.read_prices, args=())
         thread_candles = Thread(target=self.read_last_1M, args=())
 

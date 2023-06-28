@@ -3,7 +3,7 @@ requires = ["setuptools>=42.0","wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = "-ra -q --cov=api --cov=data --cov=models --cov=trading --cov=utils"
+addopts = "-ra -q -v --cov=api --cov=data --cov=models --cov=trading --cov=utils"
 testpaths = [
     "tests",
 ]
