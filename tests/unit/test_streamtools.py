@@ -4,7 +4,7 @@ Check the XTBClient of XTB API is valid.
 
 import pytest
 from copy import copy
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, patch
 import numpy as np
 from api.client import XTBClient, stream_session_simulator
 from api.streamtools import WalletStream, PositionObservator, DataStream
@@ -568,7 +568,27 @@ class Test_DataStream:
         }
 
     @pytest.fixture
-    def candle_msg(self):
+    def price_msg2(self):
+        return {
+            "command": "tickPrices",
+            "data": {
+                "ask": 5000.0,
+                "askVolume": 15000,
+                "bid": 4000.0,
+                "bidVolume": 16000,
+                "high": 7000.0,
+                "level": 0,
+                "low": 3500.0,
+                "quoteId": 0,
+                "spreadRaw": 0.000003,
+                "spreadTable": 0.00042,
+                "symbol": "EURUSD",
+                "timestamp": 1272529161605,
+            },
+        }
+
+    @pytest.fixture
+    def candle_msg_test(self):
         return {
             "command": "candle",
             "data": {
@@ -580,8 +600,25 @@ class Test_DataStream:
                 "open": 4.1848,
                 "quoteId": 2,
                 "symbol": "EURUSD",
-                "vol": 0.0,
-            },
+                "vol": 0.0
+            }
+        }
+
+    @pytest.fixture
+    def candle_msg_test2(self):
+        return {
+            "command": "candle",
+            "data": {
+                "close": 4.1849,
+                "ctm": 1378369375000,
+                "ctmString": "Sep 05, 2013 10:22:55 AM",
+                "high": 4.1854,
+                "low": 4.1848,
+                "open": 4.1848,
+                "quoteId": 2,
+                "symbol": "EURUSD",
+                "vol": 1.0
+            }
         }
 
     @pytest.mark.parametrize(
@@ -615,13 +652,34 @@ class Test_DataStream:
             mock_data_stream.__getattribute__(atribut), expected
         )
 
-    def test_read_stream_messages_write_candle_msg_to_right_atrib(
-        self, mock_data_stream, candle_msg
+    def test_read_stream_messages_write_candle_msg_to_candle_msg_atrib(
+        self, mock_data_stream, candle_msg_test
     ):
-        mock_data_stream.client.connection_stream = MagicMock().mock_calls
-        mock_data_stream.client.connection_stream.side_effect = [True, False]
-        mock_data_stream.client.stream_read.return_value = candle_msg
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,False]))
+        mock_data_stream.client.stream_read = Mock(side_effect=iter([candle_msg_test]))
         mock_data_stream.read_stream_messages()
-        print(mock_data_stream.candle_msg)
-        print(mock_data_stream.client.stream_read)
-        assert np.array_equal(mock_data_stream.candle_msg, candle_msg)
+        assert mock_data_stream.candle_msg == candle_msg_test
+
+    def test_read_stream_messages_overwrite_candle_msg_in_candle_msg_atrib(
+        self, mock_data_stream, candle_msg_test,candle_msg_test2
+    ):
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,True,False]))
+        mock_data_stream.client.stream_read = Mock(side_effect=iter([candle_msg_test,candle_msg_test2]))
+        mock_data_stream.read_stream_messages()
+        assert mock_data_stream.candle_msg == candle_msg_test2
+
+    def test_read_stream_messages_write_tickPrices_msg_to_tick_msg_atrib(
+        self, mock_data_stream, price_msg
+    ):
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,False]))
+        mock_data_stream.client.stream_read = Mock(side_effect=iter([price_msg]))
+        mock_data_stream.read_stream_messages()
+        assert mock_data_stream.tick_msg == price_msg
+
+    def test_read_stream_messages_overwrite_tickPrices_msg_in_tick_msg_atrib(
+        self, mock_data_stream, price_msg, price_msg2
+    ):
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,True,False]))
+        mock_data_stream.client.stream_read = Mock(side_effect=iter([price_msg, price_msg2]))
+        mock_data_stream.read_stream_messages()
+        assert mock_data_stream.tick_msg == price_msg2
