@@ -268,6 +268,8 @@ class DataStream:
         """
         Method for env monitoring
         """
+        # TODO: add more complete environmental monitoring
+        # than just a stream connection
         if self.client.connection_stream is True:
             return True
         else:

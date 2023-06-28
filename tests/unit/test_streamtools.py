@@ -568,6 +568,26 @@ class Test_DataStream:
         }
 
     @pytest.fixture
+    def price_array(self):
+        return np.array(
+            [
+                [
+                    4000.0,
+                    15000,
+                    4000.0,
+                    16000,
+                    4000.0,
+                    0,
+                    3500.0,
+                    0,
+                    0.000003,
+                    0.00042,
+                    1272529161605,
+                ]
+            ]
+        )
+
+    @pytest.fixture
     def price_msg2(self):
         return {
             "command": "tickPrices",
@@ -603,6 +623,21 @@ class Test_DataStream:
                 "vol": 0.0
             }
         }
+
+    @pytest.fixture
+    def candle_array(self):
+        return np.array(
+            [
+                [
+                    4.1849,
+                    1378369375000,
+                    4.1854,
+                    4.1848,
+                    4.1848,
+                    0.0,
+                ]
+            ]
+        )
 
     @pytest.fixture
     def candle_msg_test2(self):
@@ -683,3 +718,27 @@ class Test_DataStream:
         mock_data_stream.client.stream_read = Mock(side_effect=iter([price_msg, price_msg2]))
         mock_data_stream.read_stream_messages()
         assert mock_data_stream.tick_msg == price_msg2
+
+    def test_read_prices_convert_tick_msg_to_symbols_price(
+        self, mock_data_stream, price_msg, price_array
+    ):
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,True,False]))
+        with patch.object(mock_data_stream, 'tick_msg', new=price_msg):
+            mock_data_stream.read_prices()
+        assert np.array_equal(mock_data_stream.symbols_price, price_array)
+
+    def test_read_prices_not_convert_candle_msg_to_symbols_price(
+        self, mock_data_stream, candle_msg_test
+    ):
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,True,False]))
+        with patch.object(mock_data_stream, 'candle_msg', new=candle_msg_test):
+            mock_data_stream.read_prices()
+        assert np.array_equal(mock_data_stream.symbols_price, np.empty(shape=[0, 11]))
+
+    def test_read_last_1M_convert_candle_msg_to_symbols_last_1M(
+        self, mock_data_stream, candle_msg_test, candle_array
+    ):
+        mock_data_stream.is_connected = Mock(side_effect=iter([True,True,False]))
+        with patch.object(mock_data_stream, 'candle_msg', new=candle_msg_test):
+            mock_data_stream.read_last_1M()
+        assert np.array_equal(mock_data_stream.symbols_last_1M, candle_array)
