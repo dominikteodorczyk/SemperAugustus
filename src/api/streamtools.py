@@ -25,7 +25,7 @@ class WalletStream:
     """
 
     def __init__(self) -> None:
-        self.client = XTBClient('DEMO')
+        self.client = XTBClient("DEMO")
         self.balance: np.ndarray[Any, np.dtype[Any]] = np.array([])
 
     def subscribe(self) -> None:
@@ -264,12 +264,21 @@ class DataStream:
             }
         )
 
+    def is_connected(self):
+        """
+        Method for env monitoring
+        """
+        if self.client.connection_stream is True:
+            return True
+        else:
+            return False
+
     def read_stream_messages(self):
         """
         Reads data from the stream and writes it to the class attributes
         (candle or tick).
         """
-        while self.client.connection_stream is True:
+        while self.is_connected() is True:
             message = self.client.stream_read()
             if message["command"] == "tickPrices":
                 self.tick_msg = message
@@ -280,7 +289,7 @@ class DataStream:
         """
         Aggregates price msg.
         """
-        while self.client.connection_stream is True:
+        while self.is_connected() is True:
             try:
                 dictor = self.tick_msg["data"]
                 # 'ask','bid','high','low','askVolume','bidVolume',
@@ -296,7 +305,7 @@ class DataStream:
         """
         Aggregates candles msg.
         """
-        while self.client.connection_stream is True:
+        while self.is_connected() is True:
             try:
                 dictor = self.candle_msg["data"]
                 # 'ctm', 'open', 'close', 'high', 'low', 'vol', 'quoteId'
@@ -308,13 +317,6 @@ class DataStream:
             except Exception:
                 sleep(1)
 
-    def stream_read(self):
-        """
-        Initiates continuous reading of stream data.
-        """
-        while self.client.connection_stream is True:
-            self.read_stream_messages()
-
     def run(self):
         """
         Data subscraptions, and threads for reading messages from
@@ -323,7 +325,7 @@ class DataStream:
         """
         self.client.open_session()
         self.subscribe()
-        thread_read = Thread(target=self.stream_read, args=())
+        thread_read = Thread(target=self.read_stream_messages, args=())
         thread_prices = Thread(target=self.read_prices, args=())
         thread_candles = Thread(target=self.read_last_1M, args=())
 
