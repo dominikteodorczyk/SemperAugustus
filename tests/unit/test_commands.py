@@ -3,9 +3,7 @@ Function tests in the commands module.
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch
-import pytest
-import numpy as np
+from unittest.mock import MagicMock
 from api.commands import get_trades
 
 
@@ -67,7 +65,6 @@ class Test_get_trades:
         """
         Test to check the type returned by the function is to be a dictionary).
         """
-
         client = MagicMock()
         client.send_n_return.return_value = get_trades_msg
         trade_return = get_trades(client=client, order_no=1234567)
@@ -83,3 +80,26 @@ class Test_get_trades:
         client.send_n_return.return_value = get_trades_msg
         trade_return = get_trades(client=client, order_no=1234567)
         assert trade_return == get_trades_return
+
+    def test_get_trades_send_requests_as_long_get_trades_data(
+        self, get_trades_msg, get_trades_return
+    ):
+        """
+        Test if function returns correct data after several failures
+        """
+        client = MagicMock()
+        client.send_n_return.side_effect = [None, None, None, get_trades_msg]
+        trade_return = get_trades(client=client, order_no=1234567)
+        assert trade_return == get_trades_return
+
+    def test_get_trades_make_loop_until_get_data(
+        self, get_trades_msg, get_trades_return
+    ):
+        """
+        Test if the function performed several iterations until it got the
+        correct data
+        """
+        client = MagicMock()
+        client.send_n_return.side_effect = [None, None, None, get_trades_msg]
+        get_trades(client=client, order_no=1234567)
+        assert client.send_n_return.call_count == 4
