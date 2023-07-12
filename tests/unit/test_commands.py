@@ -4,7 +4,12 @@ Function tests in the commands module.
 
 from unittest.mock import MagicMock, patch
 import pytest
-from api.commands import get_trades, get_margin, buy_transaction, sell_transaction
+from api.commands import (
+    get_trades,
+    get_margin,
+    buy_transaction,
+    sell_transaction,
+)
 
 
 class Test_get_trades:
@@ -142,6 +147,7 @@ class Test_buy_transaction:
     """
     Module to test functions that execute a buy order.
     """
+
     @pytest.fixture
     def buy_response(self):
         return {"status": True, "returnData": {"order": 1234567}}
@@ -188,9 +194,7 @@ class Test_buy_transaction:
         client.send_n_return.return_value = buy_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = buy_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
@@ -206,13 +210,11 @@ class Test_buy_transaction:
         client.send_n_return.return_value = buy_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = buy_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
-            assert 'margin' in position_data
+            assert "margin" in position_data
 
     def test_is_buy_transaction_return_dict_with_order_no_key(
         self, buy_response, get_margin_return, get_trades_return
@@ -224,13 +226,11 @@ class Test_buy_transaction:
         client.send_n_return.return_value = buy_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = buy_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
-            assert 'order_no' in position_data
+            assert "order_no" in position_data
 
     def test_is_buy_transaction_return_dict_with_transactions_data_no_key(
         self, buy_response, get_margin_return, get_trades_return
@@ -242,16 +242,18 @@ class Test_buy_transaction:
         client.send_n_return.return_value = buy_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = buy_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
-            assert 'transactions_data' in position_data
+            assert "transactions_data" in position_data
 
     def test_is_buy_transaction_return_expected_dict(
-        self, buy_response, get_margin_return, get_trades_return, buy_transaction_return
+        self,
+        buy_response,
+        get_margin_return,
+        get_trades_return,
+        buy_transaction_return,
     ):
         """
         Test to validate the returned data.
@@ -260,19 +262,18 @@ class Test_buy_transaction:
         client.send_n_return.return_value = buy_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = buy_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
             assert position_data == buy_transaction_return
 
 
-class Test_buy_transaction:
+class Test_sell_transaction:
     """
     Module to test functions that execute a sell order.
     """
+
     @pytest.fixture
     def sell_response(self):
         return {"status": True, "returnData": {"order": 1234567}}
@@ -319,9 +320,7 @@ class Test_buy_transaction:
         client.send_n_return.return_value = sell_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = sell_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
@@ -337,13 +336,11 @@ class Test_buy_transaction:
         client.send_n_return.return_value = sell_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = sell_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
-            assert 'margin' in position_data
+            assert "margin" in position_data
 
     def test_is_sell_transaction_return_dict_with_order_no_key(
         self, sell_response, get_margin_return, get_trades_return
@@ -355,13 +352,11 @@ class Test_buy_transaction:
         client.send_n_return.return_value = sell_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = sell_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
-            assert 'order_no' in position_data
+            assert "order_no" in position_data
 
     def test_is_buy_transaction_return_dict_with_transactions_data_no_key(
         self, sell_response, get_margin_return, get_trades_return
@@ -373,16 +368,18 @@ class Test_buy_transaction:
         client.send_n_return.return_value = sell_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = sell_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
-            assert 'transactions_data' in position_data
+            assert "transactions_data" in position_data
 
     def test_is_buy_transaction_return_expected_dict(
-        self, sell_response, get_margin_return, get_trades_return, sell_transaction_return
+        self,
+        sell_response,
+        get_margin_return,
+        get_trades_return,
+        sell_transaction_return,
     ):
         """
         Test to validate the returned data.
@@ -391,11 +388,8 @@ class Test_buy_transaction:
         client.send_n_return.return_value = sell_response
         with patch(
             "api.commands.get_margin", return_value=get_margin_return
-        ) as mock_get_margin_function, patch(
-            "api.commands.get_trades", return_value=get_trades_return
-        ) as mock_get_trades_function:
+        ), patch("api.commands.get_trades", return_value=get_trades_return):
             position_data = sell_transaction(
                 client=client, symbol="EURUSD", volume=0.10
             )
             assert position_data == sell_transaction_return
-
