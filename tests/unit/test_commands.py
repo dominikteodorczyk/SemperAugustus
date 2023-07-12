@@ -2,8 +2,8 @@
 Function tests in the commands module.
 """
 
-import pytest
 from unittest.mock import MagicMock
+import pytest
 from api.commands import get_trades, get_margin
 
 
@@ -68,7 +68,7 @@ class Test_get_trades:
         client = MagicMock()
         client.send_n_return.return_value = get_trades_msg
         trade_return = get_trades(client=client, order_no=1234567)
-        assert type(trade_return) is dict
+        assert isinstance(trade_return, dict)
 
     def test_ist_get_trades_return_expected_message(
         self, get_trades_msg, get_trades_return
@@ -92,9 +92,7 @@ class Test_get_trades:
         trade_return = get_trades(client=client, order_no=1234567)
         assert trade_return == get_trades_return
 
-    def test_get_trades_make_loop_until_get_data(
-        self, get_trades_msg, get_trades_return
-    ):
+    def test_get_trades_make_loop_until_get_data(self, get_trades_msg):
         """
         Test if the function performed several iterations until it got the
         correct data
@@ -104,38 +102,37 @@ class Test_get_trades:
         get_trades(client=client, order_no=1234567)
         assert client.send_n_return.call_count == 4
 
-class Test_get_margin():
+
+class Test_get_margin:
     """
     Test of the get margin function returning the margin calculated by the
     broker for the expected position.
     """
+
     @pytest.fixture
     def get_margin_msg(self):
-        return {
-            "status": True,
-            "returnData": {
-                "margin": 4399.350
-            }
-        }
+        return {"status": True, "returnData": {"margin": 4399.350}}
 
     @pytest.fixture
     def get_margin_return(self):
         return 4399.350
 
-    def test_is_margin_return_float_if_get_data(self,get_margin_msg):
+    def test_is_margin_return_float_if_get_data(self, get_margin_msg):
         """
         Whether the function returns a float.
         """
         client = MagicMock()
         client.send_n_return.return_value = get_margin_msg
-        margin_return = get_margin(client=client, symbol='EURPLN', volume = 1.0)
-        assert type(margin_return) == float
+        margin_return = get_margin(client=client, symbol="EURPLN", volume=1.0)
+        assert isinstance(margin_return, float)
 
-    def test_is_margin_return_return_expected_margin_value(self,get_margin_msg,get_margin_return):
+    def test_is_margin_return_return_expected_margin_value(
+        self, get_margin_msg, get_margin_return
+    ):
         """
         Whether the function returns a expected margin.
         """
         client = MagicMock()
         client.send_n_return.return_value = get_margin_msg
-        margin_return = get_margin(client=client, symbol='EURPLN', volume = 1.0)
+        margin_return = get_margin(client=client, symbol="EURPLN", volume=1.0)
         assert margin_return == get_margin_return
