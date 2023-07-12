@@ -4,7 +4,7 @@ Function tests in the commands module.
 
 from unittest.mock import MagicMock, patch
 import pytest
-from api.commands import get_trades, get_margin, buy_transaction
+from api.commands import get_trades, get_margin, buy_transaction, sell_transaction
 
 
 class Test_get_trades:
@@ -267,4 +267,135 @@ class Test_buy_transaction:
                 client=client, symbol="EURUSD", volume=0.10
             )
             assert position_data == buy_transaction_return
+
+
+class Test_buy_transaction:
+    """
+    Module to test functions that execute a sell order.
+    """
+    @pytest.fixture
+    def sell_response(self):
+        return {"status": True, "returnData": {"order": 1234567}}
+
+    @pytest.fixture
+    def get_margin_return(self):
+        return 4399.350
+
+    @pytest.fixture
+    def get_trades_return(self):
+        return {
+            "symbol": "EURUSD",
+            "order": 1234567,
+            "position": 1234567,
+            "cmd": 1,
+            "volume": 0.10,
+            "open_price": 1.4,
+            "open_time": 1272380927000,
+        }
+
+    @pytest.fixture
+    def sell_transaction_return(self):
+        return {
+            "margin": 4399.35,
+            "order_no": 1234567,
+            "transactions_data": {
+                "symbol": "EURUSD",
+                "order": 1234567,
+                "position": 1234567,
+                "cmd": 1,
+                "volume": 0.10,
+                "open_price": 1.4,
+                "open_time": 1272380927000,
+            },
+        }
+
+    def test_is_sell_transaction_return_dict(
+        self, sell_response, get_margin_return, get_trades_return
+    ):
+        """
+        Test to check if a function returns a dictionary.
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = sell_response
+        with patch(
+            "api.commands.get_margin", return_value=get_margin_return
+        ) as mock_get_margin_function, patch(
+            "api.commands.get_trades", return_value=get_trades_return
+        ) as mock_get_trades_function:
+            position_data = sell_transaction(
+                client=client, symbol="EURUSD", volume=0.10
+            )
+            assert isinstance(position_data, dict)
+
+    def test_is_sell_transaction_return_dict_with_margin_key(
+        self, sell_response, get_margin_return, get_trades_return
+    ):
+        """
+        Test if there is a margin key in the returned dictionary
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = sell_response
+        with patch(
+            "api.commands.get_margin", return_value=get_margin_return
+        ) as mock_get_margin_function, patch(
+            "api.commands.get_trades", return_value=get_trades_return
+        ) as mock_get_trades_function:
+            position_data = sell_transaction(
+                client=client, symbol="EURUSD", volume=0.10
+            )
+            assert 'margin' in position_data
+
+    def test_is_sell_transaction_return_dict_with_order_no_key(
+        self, sell_response, get_margin_return, get_trades_return
+    ):
+        """
+        Test if there is a order_no key in the returned dictionary
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = sell_response
+        with patch(
+            "api.commands.get_margin", return_value=get_margin_return
+        ) as mock_get_margin_function, patch(
+            "api.commands.get_trades", return_value=get_trades_return
+        ) as mock_get_trades_function:
+            position_data = sell_transaction(
+                client=client, symbol="EURUSD", volume=0.10
+            )
+            assert 'order_no' in position_data
+
+    def test_is_buy_transaction_return_dict_with_transactions_data_no_key(
+        self, sell_response, get_margin_return, get_trades_return
+    ):
+        """
+        Test if there is a transactions_data key in the returned dictionary
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = sell_response
+        with patch(
+            "api.commands.get_margin", return_value=get_margin_return
+        ) as mock_get_margin_function, patch(
+            "api.commands.get_trades", return_value=get_trades_return
+        ) as mock_get_trades_function:
+            position_data = sell_transaction(
+                client=client, symbol="EURUSD", volume=0.10
+            )
+            assert 'transactions_data' in position_data
+
+    def test_is_buy_transaction_return_expected_dict(
+        self, sell_response, get_margin_return, get_trades_return, sell_transaction_return
+    ):
+        """
+        Test to validate the returned data.
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = sell_response
+        with patch(
+            "api.commands.get_margin", return_value=get_margin_return
+        ) as mock_get_margin_function, patch(
+            "api.commands.get_trades", return_value=get_trades_return
+        ) as mock_get_trades_function:
+            position_data = sell_transaction(
+                client=client, symbol="EURUSD", volume=0.10
+            )
+            assert position_data == sell_transaction_return
 
