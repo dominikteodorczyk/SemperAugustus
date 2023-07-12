@@ -2,9 +2,9 @@
 Function tests in the commands module.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import pytest
-from api.commands import get_trades, get_margin
+from api.commands import get_trades, get_margin, buy_transaction
 
 
 class Test_get_trades:
@@ -136,3 +136,59 @@ class Test_get_margin:
         client.send_n_return.return_value = get_margin_msg
         margin_return = get_margin(client=client, symbol="EURPLN", volume=1.0)
         assert margin_return == get_margin_return
+
+
+class Test_buy_transaction:
+    @pytest.fixture
+    def buy_response(self):
+        return {"status": True, "returnData": {"order": 1234567}}
+
+    @pytest.fixture
+    def get_margin_return(self):
+        return 4399.350
+
+    @pytest.fixture
+    def get_trades_return(self):
+        return {
+            "symbol": "EURUSD",
+            "order": 1234567,
+            "position": 1234567,
+            "cmd": 1,
+            "volume": 0.10,
+            "open_price": 1.4,
+            "open_time": 1272380927000,
+        }
+
+    @pytest.fixture
+    def buy_transaction_return(self):
+        return {
+            "margin": 4399.35,
+            "order_no": 1234567,
+            "transactions_data": {
+                "symbol": "EURUSD",
+                "order": 1234567,
+                "position": 1234567,
+                "cmd": 1,
+                "volume": 0.10,
+                "open_price": 1.4,
+                "open_time": 1272380927000,
+            },
+        }
+
+    def test_is_buy_transaction_return_dict(
+        self, buy_response, get_margin_return, get_trades_return
+    ):
+        """
+        A class of tests to see if a function returns a dictionary.
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = buy_response
+        with patch(
+            "api.commands.get_margin", return_value=get_margin_return
+        ) as mock_get_margin_function, patch(
+            "api.commands.get_trades", return_value=get_trades_return
+        ) as mock_get_trades_function:
+            position_data = buy_transaction(
+                client=client, symbol="EURUSD", volume=0.10
+            )
+            assert isinstance(position_data, dict)
