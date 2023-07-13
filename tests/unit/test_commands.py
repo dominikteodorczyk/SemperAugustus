@@ -488,3 +488,27 @@ class Test_close_position:
             "close_price": 1.7256,
             "close_time": 1272380967000,
         }
+
+    @pytest.fixture
+    def server_time_response(self):
+        return {
+            "status": True,
+            "returnData": {
+                "time": 1392211379731,
+                "timeString": "Feb 12, 2014 2:22:59 PM"
+            }
+        }
+
+
+    def test_is_close_position_return_dict(self, close_returned_message,first_trading_history_response, server_time_response):
+        """
+        Tests to see if a function returns a dictionary.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": [first_trading_history_response]
+        }
+        client = MagicMock()
+        client.send_n_return.side_effect = [close_returned_message, server_time_response, trading_history_msg]
+        close_position_return = close_position(client=client,symbol="EURUSD", position=1234567,volume=0.10,cmd=0)
+        assert isinstance(close_position_return, dict)
