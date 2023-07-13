@@ -9,7 +9,7 @@ from api.commands import (
     get_margin,
     buy_transaction,
     sell_transaction,
-    close_position
+    close_position,
 )
 
 
@@ -405,12 +405,7 @@ class Test_close_position:
 
     @pytest.fixture
     def close_returned_message(self):
-        return {
-            "status": True,
-            "returnData": {
-                "order": 1234567
-            }
-        }
+        return {"status": True, "returnData": {"order": 1234567}}
 
     @pytest.fixture
     def first_trading_history_response(self):
@@ -440,7 +435,7 @@ class Test_close_position:
             "symbol": "EURUSD",
             "timestamp": 1272540251000,
             "tp": 0.0,
-            "volume": 0.10
+            "volume": 0.10,
         }
 
     @pytest.fixture
@@ -471,7 +466,7 @@ class Test_close_position:
             "symbol": "EURUSD",
             "timestamp": 1272540251000,
             "tp": 0.0,
-            "volume": 0.10
+            "volume": 0.10,
         }
 
     @pytest.fixture
@@ -484,7 +479,7 @@ class Test_close_position:
             "volume": 0.10,
             "profit": 2196.44,
             "open_price": 1.4,
-            "open_time": 1272380967000,
+            "open_time": 1272380927000,
             "close_price": 1.7256,
             "close_time": 1272380967000,
         }
@@ -495,20 +490,97 @@ class Test_close_position:
             "status": True,
             "returnData": {
                 "time": 1392211379731,
-                "timeString": "Feb 12, 2014 2:22:59 PM"
-            }
+                "timeString": "Feb 12, 2014 2:22:59 PM",
+            },
         }
 
-
-    def test_is_close_position_return_dict(self, close_returned_message,first_trading_history_response, server_time_response):
+    def test_is_close_position_return_dict(
+        self,
+        close_returned_message,
+        first_trading_history_response,
+        server_time_response,
+    ):
         """
         Tests to see if a function returns a dictionary.
         """
         trading_history_msg = {
             "status": True,
-            "returnData": [first_trading_history_response]
+            "returnData": [first_trading_history_response],
         }
         client = MagicMock()
-        client.send_n_return.side_effect = [close_returned_message, server_time_response, trading_history_msg]
-        close_position_return = close_position(client=client,symbol="EURUSD", position=1234567,volume=0.10,cmd=0)
+        client.send_n_return.side_effect = [
+            close_returned_message,
+            server_time_response,
+            trading_history_msg,
+        ]
+        close_position_return = close_position(
+            client=client,
+            symbol="EURUSD",
+            position=1234567,
+            volume=0.10,
+            cmd=0,
+        )
         assert isinstance(close_position_return, dict)
+
+    def test_is_close_position_return_expected_dict(
+        self,
+        close_returned_message,
+        first_trading_history_response,
+        server_time_response,
+        expected_close_position_dict,
+    ):
+        """
+        Tests to see if a function returns a expected dictionary.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": [first_trading_history_response],
+        }
+        client = MagicMock()
+        client.send_n_return.side_effect = [
+            close_returned_message,
+            server_time_response,
+            trading_history_msg,
+        ]
+        close_position_return = close_position(
+            client=client,
+            symbol="EURUSD",
+            position=1234567,
+            volume=0.10,
+            cmd=0,
+        )
+        assert close_position_return == expected_close_position_dict
+
+    def test_is_close_position_return_expected_dict_if_many_transaction(
+        self,
+        close_returned_message,
+        first_trading_history_response,
+        secound_trading_history_response,
+        server_time_response,
+        expected_close_position_dict,
+    ):
+        """
+        Test that returns the appropriate value for multiple
+        transactions in history.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": [
+                first_trading_history_response,
+                secound_trading_history_response,
+            ],
+        }
+        client = MagicMock()
+        client.send_n_return.side_effect = [
+            close_returned_message,
+            server_time_response,
+            trading_history_msg,
+        ]
+        close_position_return = close_position(
+            client=client,
+            symbol="EURUSD",
+            position=1234567,
+            volume=0.10,
+            cmd=0,
+        )
+        assert close_position_return == expected_close_position_dict
