@@ -9,6 +9,7 @@ from api.commands import (
     get_margin,
     buy_transaction,
     sell_transaction,
+    close_position
 )
 
 
@@ -393,3 +394,97 @@ class Test_sell_transaction:
                 client=client, symbol="EURUSD", volume=0.10
             )
             assert position_data == sell_transaction_return
+
+
+class Test_close_position:
+    """
+    Tests of the close position function for closing an open position
+    and returning a dictionary with the final data of the transaction
+    (result)
+    """
+
+    @pytest.fixture
+    def close_returned_message(self):
+        return {
+            "status": True,
+            "returnData": {
+                "order": 1234567
+            }
+        }
+
+    @pytest.fixture
+    def first_trading_history_response(self):
+        return {
+            "close_price": 1.7256,
+            "close_time": 1272380967000,
+            "close_timeString": 0,
+            "closed": 0,
+            "cmd": 0,
+            "comment": "Web Trader",
+            "commission": 0.0,
+            "customComment": "Some text",
+            "digits": 4,
+            "expiration": 0,
+            "expirationString": 0,
+            "margin_rate": 0.0,
+            "offset": 0,
+            "open_price": 1.4,
+            "open_time": 1272380927000,
+            "open_timeString": "Fri Jan 11 10:03:36 CET 2013",
+            "order": 7497776,
+            "order2": 1234567,
+            "position": 1234567,
+            "profit": 2196.44,
+            "sl": 0.0,
+            "storage": -4.46,
+            "symbol": "EURUSD",
+            "timestamp": 1272540251000,
+            "tp": 0.0,
+            "volume": 0.10
+        }
+
+    @pytest.fixture
+    def secound_trading_history_response(self):
+        return {
+            "close_price": 1.5656,
+            "close_time": 1272380947000,
+            "close_timeString": 0,
+            "closed": 0,
+            "cmd": 0,
+            "comment": "Web Trader",
+            "commission": 0.0,
+            "customComment": "Some text",
+            "digits": 4,
+            "expiration": 0,
+            "expirationString": 0,
+            "margin_rate": 0.0,
+            "offset": 0,
+            "open_price": 1.4,
+            "open_time": 1272380927000,
+            "open_timeString": "Fri Jan 11 10:03:36 CET 2013",
+            "order": 7497776,
+            "order2": 7497776,
+            "position": 7497776,
+            "profit": -2196.44,
+            "sl": 0.0,
+            "storage": -4.46,
+            "symbol": "EURUSD",
+            "timestamp": 1272540251000,
+            "tp": 0.0,
+            "volume": 0.10
+        }
+
+    @pytest.fixture
+    def expected_close_position_dict(self):
+        return {
+            "symbol": "EURUSD",
+            "order": 1234567,
+            "position": 1234567,
+            "cmd": 0,
+            "volume": 0.10,
+            "profit": 2196.44,
+            "open_price": 1.4,
+            "open_time": 1272380967000,
+            "close_price": 1.7256,
+            "close_time": 1272380967000,
+        }
