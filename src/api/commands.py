@@ -28,7 +28,6 @@ def get_trades(client: XTBClient, order_no: int) -> dict[str, Any]:
         sleep(1)
         try:
             response = client.send_n_return(message)
-            print(response)
             if isinstance(response["returnData"], list):
                 for trade in response["returnData"]:
                     if int(trade.get("order2", 0)) == order_no:
