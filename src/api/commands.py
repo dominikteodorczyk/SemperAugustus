@@ -326,6 +326,8 @@ def get_historical_candles(
             data_status = True
         except Exception:
             sleep(2)
+        print(data)
+    print(historical_data)
     return historical_data
 
 

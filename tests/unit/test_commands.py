@@ -599,8 +599,8 @@ class Test_get_historical_candles:
     @pytest.fixture
     def first_candle_history_response(self):
         return {
-            "close": 1.0,
             "ctm": 1392211360000,
+            "close": 1.0,
             "ctmString": "Jan 10, 2014 3:04:00 PM",
             "high": 6.0,
             "low": 0.0,
@@ -611,8 +611,8 @@ class Test_get_historical_candles:
     @pytest.fixture
     def secound_candle_history_response(self):
         return {
-            "close": 1.0,
             "ctm": 1392211350000,
+            "close": 1.0,
             "ctmString": "Jan 10, 2014 3:04:00 PM",
             "high": 6.0,
             "low": 0.0,
@@ -621,20 +621,17 @@ class Test_get_historical_candles:
         }
 
     @pytest.fixture
-    def third_candle_history_response(self):
-        return {
-            "close": 1.0,
-            "ctm": 1392000000000,
-            "ctmString": "Jan 10, 2014 3:04:00 PM",
-            "high": 6.0,
-            "low": 0.0,
-            "open": 41848.0,
-            "vol": 0.0
-        }
+    def expected_array(self):
+        return np.array([[1.39221136e+12, 1.00000000e+00, 7.00000000e+00, 1.00000000e+00, 4.18490000e+04, 0.00000000e+00]])
+
+    @pytest.fixture
+    def expected_array_extended(self):
+        return np.array([[1.39221136e+12, 1.00000000e+00, 7.00000000e+00, 1.00000000e+00,4.18490000e+04, 0.00000000e+00],
+                        [1.39221135e+12, 1.00000000e+00, 7.00000000e+00, 1.00000000e+00, 4.18490000e+04, 0.00000000e+00]])
 
     def test_get_historical_candles_return_np_array(self,server_time_response,first_candle_history_response):
         """
-        Test if funckja correctly returns an array of np.array.
+        Test if function correctly returns an array of np.array.
         """
         trading_history_msg = {
             "status": True,
@@ -649,3 +646,39 @@ class Test_get_historical_candles:
             "api.commands.get_server_time", return_value=server_time_response):
             historical_data = get_historical_candles(client=client,symbol="EURUSD",shift=60)
             assert isinstance(historical_data, np.ndarray)
+
+    def test_get_historical_candles_return_expected_array(self,server_time_response,first_candle_history_response,expected_array):
+        """
+        Test if function returns the right array.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": {
+                "digits": 4,
+                "rateInfos": [first_candle_history_response]
+            }
+        }
+        client = MagicMock()
+        client.send_n_return.return_value = trading_history_msg
+        with patch(
+            "api.commands.get_server_time", return_value=server_time_response):
+            historical_data = get_historical_candles(client=client,symbol="EURUSD",shift=60)
+            assert np.array_equal(historical_data,expected_array)
+
+    def test_get_historical_candles_return_expected_array_if_many_candles(self,server_time_response,first_candle_history_response,secound_candle_history_response,expected_array_extended):
+        """
+        Test whether the function aggregates several candles into a single matrix.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": {
+                "digits": 4,
+                "rateInfos": [first_candle_history_response,secound_candle_history_response]
+            }
+        }
+        client = MagicMock()
+        client.send_n_return.return_value = trading_history_msg
+        with patch(
+            "api.commands.get_server_time", return_value=server_time_response):
+            historical_data = get_historical_candles(client=client,symbol="EURUSD",shift=60)
+            assert np.array_equal(historical_data,expected_array_extended)
