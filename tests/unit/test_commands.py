@@ -4,12 +4,15 @@ Function tests in the commands module.
 
 from unittest.mock import MagicMock, patch
 import pytest
+import numpy as np
 from api.commands import (
     get_trades,
     get_margin,
     buy_transaction,
     sell_transaction,
     close_position,
+    get_historical_candles,
+    get_server_time,
 )
 
 
@@ -584,3 +587,195 @@ class Test_close_position:
             cmd=0,
         )
         assert close_position_return == expected_close_position_dict
+
+
+class Test_get_historical_candles:
+    """
+    Tests of the function downloading historical candles.
+    """
+
+    @pytest.fixture
+    def server_time_response(self):
+        return 1392211379731
+
+    @pytest.fixture
+    def first_candle_history_response(self):
+        return {
+            "ctm": 1392211360000,
+            "close": 1.0,
+            "ctmString": "Jan 10, 2014 3:04:00 PM",
+            "high": 6.0,
+            "low": 0.0,
+            "open": 41848.0,
+            "vol": 0.0,
+        }
+
+    @pytest.fixture
+    def secound_candle_history_response(self):
+        return {
+            "ctm": 1392211350000,
+            "close": 1.0,
+            "ctmString": "Jan 10, 2014 3:04:00 PM",
+            "high": 6.0,
+            "low": 0.0,
+            "open": 41848.0,
+            "vol": 0.0,
+        }
+
+    @pytest.fixture
+    def expected_array(self):
+        return np.array(
+            [
+                [
+                    1.39221136e12,
+                    1.00000000e00,
+                    7.00000000e00,
+                    1.00000000e00,
+                    4.18490000e04,
+                    0.00000000e00,
+                ]
+            ]
+        )
+
+    @pytest.fixture
+    def expected_array_extended(self):
+        return np.array(
+            [
+                [
+                    1.39221136e12,
+                    1.00000000e00,
+                    7.00000000e00,
+                    1.00000000e00,
+                    4.18490000e04,
+                    0.00000000e00,
+                ],
+                [
+                    1.39221135e12,
+                    1.00000000e00,
+                    7.00000000e00,
+                    1.00000000e00,
+                    4.18490000e04,
+                    0.00000000e00,
+                ],
+            ]
+        )
+
+    def test_get_historical_candles_return_np_array(
+        self, server_time_response, first_candle_history_response
+    ):
+        """
+        Test if function correctly returns an array of np.array.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": {
+                "digits": 4,
+                "rateInfos": [first_candle_history_response],
+            },
+        }
+        client = MagicMock()
+        client.send_n_return.return_value = trading_history_msg
+        with patch(
+            "api.commands.get_server_time", return_value=server_time_response
+        ):
+            historical_data = get_historical_candles(
+                client=client, symbol="EURUSD", shift=60
+            )
+            assert isinstance(historical_data, np.ndarray)
+
+    def test_get_historical_candles_return_expected_array(
+        self,
+        server_time_response,
+        first_candle_history_response,
+        expected_array,
+    ):
+        """
+        Test if function returns the right array.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": {
+                "digits": 4,
+                "rateInfos": [first_candle_history_response],
+            },
+        }
+        client = MagicMock()
+        client.send_n_return.return_value = trading_history_msg
+        with patch(
+            "api.commands.get_server_time", return_value=server_time_response
+        ):
+            historical_data = get_historical_candles(
+                client=client, symbol="EURUSD", shift=60
+            )
+            assert np.array_equal(historical_data, expected_array)
+
+    def test_get_historical_candles_return_expected_array_if_many_candles(
+        self,
+        server_time_response,
+        first_candle_history_response,
+        secound_candle_history_response,
+        expected_array_extended,
+    ):
+        """
+        Test whether the function aggregates several candles
+        into a single matrix.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": {
+                "digits": 4,
+                "rateInfos": [
+                    first_candle_history_response,
+                    secound_candle_history_response,
+                ],
+            },
+        }
+        client = MagicMock()
+        client.send_n_return.return_value = trading_history_msg
+        with patch(
+            "api.commands.get_server_time", return_value=server_time_response
+        ):
+            historical_data = get_historical_candles(
+                client=client, symbol="EURUSD", shift=60
+            )
+            assert np.array_equal(historical_data, expected_array_extended)
+
+
+class Test_get_server_time:
+    """
+    Tests of the function that takes server time.
+    """
+
+    @pytest.fixture
+    def server_time_expected_response(self):
+        return 1392211379731
+
+    @pytest.fixture
+    def server_time_msg(self):
+        return {
+            "status": True,
+            "returnData": {
+                "time": 1392211379731,
+                "timeString": "Feb 12, 2014 2:22:59 PM",
+            },
+        }
+
+    def test_get_server_time_return_int(self, server_time_msg):
+        """
+        Test to see if a function returns an integer.
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = server_time_msg
+        server_time = get_server_time(client=client)
+        assert isinstance(server_time, int)
+
+    def test_get_server_time_return_right_int(
+        self, server_time_msg, server_time_expected_response
+    ):
+        """
+        A test to see if a function returns the right integer.
+        """
+        client = MagicMock()
+        client.send_n_return.return_value = server_time_msg
+        server_time = get_server_time(client=client)
+        assert server_time == server_time_expected_response
