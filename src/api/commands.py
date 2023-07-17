@@ -325,9 +325,7 @@ def get_historical_candles(
                 historical_data = np.vstack([historical_data, candle_data])
             data_status = True
         except Exception:
-            sleep(2)
-        print(data)
-    print(historical_data)
+            sleep(1)
     return historical_data
 
 
