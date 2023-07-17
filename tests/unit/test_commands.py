@@ -717,7 +717,8 @@ class Test_get_historical_candles:
         expected_array_extended,
     ):
         """
-        Test whether the function aggregates several candles into a single matrix.
+        Test whether the function aggregates several candles
+        into a single matrix.
         """
         trading_history_msg = {
             "status": True,
