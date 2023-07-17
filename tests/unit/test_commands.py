@@ -4,12 +4,14 @@ Function tests in the commands module.
 
 from unittest.mock import MagicMock, patch
 import pytest
+import numpy as np
 from api.commands import (
     get_trades,
     get_margin,
     buy_transaction,
     sell_transaction,
     close_position,
+    get_historical_candles
 )
 
 
@@ -584,3 +586,66 @@ class Test_close_position:
             cmd=0,
         )
         assert close_position_return == expected_close_position_dict
+
+
+class Test_get_historical_candles:
+    """
+    Tests of the function downloading historical candles.
+    """
+    @pytest.fixture
+    def server_time_response(self):
+        return 1392211379731
+
+    @pytest.fixture
+    def first_candle_history_response(self):
+        return {
+            "close": 1.0,
+            "ctm": 1392211360000,
+            "ctmString": "Jan 10, 2014 3:04:00 PM",
+            "high": 6.0,
+            "low": 0.0,
+            "open": 41848.0,
+            "vol": 0.0
+        }
+
+    @pytest.fixture
+    def secound_candle_history_response(self):
+        return {
+            "close": 1.0,
+            "ctm": 1392211350000,
+            "ctmString": "Jan 10, 2014 3:04:00 PM",
+            "high": 6.0,
+            "low": 0.0,
+            "open": 41848.0,
+            "vol": 0.0
+        }
+
+    @pytest.fixture
+    def third_candle_history_response(self):
+        return {
+            "close": 1.0,
+            "ctm": 1392000000000,
+            "ctmString": "Jan 10, 2014 3:04:00 PM",
+            "high": 6.0,
+            "low": 0.0,
+            "open": 41848.0,
+            "vol": 0.0
+        }
+
+    def test_get_historical_candles_return_np_array(self,server_time_response,first_candle_history_response):
+        """
+        Test if funckja correctly returns an array of np.array.
+        """
+        trading_history_msg = {
+            "status": True,
+            "returnData": {
+                "digits": 4,
+                "rateInfos": [first_candle_history_response]
+            }
+        }
+        client = MagicMock()
+        client.send_n_return.return_value = trading_history_msg
+        with patch(
+            "api.commands.get_server_time", return_value=server_time_response):
+            historical_data = get_historical_candles(client=client,symbol="EURUSD",shift=60)
+            assert isinstance(historical_data, np.ndarray)
