@@ -101,6 +101,8 @@ class DataBases:
     DATA_PATH = path.join(path.dirname(__file__), "data")
 
     def __init__(self) -> None:
+        if not path.exists(DataBases.DATA_PATH):
+            makedirs(DataBases.DATA_PATH)
         self.transactions = path.join(DataBases.DATA_PATH, "transactions.db")
         self.create_databases()
         print(self.transactions)
