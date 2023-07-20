@@ -29,17 +29,13 @@ class TrasactionRepository:
 
     DB_URL = f'sqlite:///{DataBases().transactions}'
 
-    def __init__(self):
+    def __init__(self, symbol):
         self.engine = create_engine(TrasactionRepository.DB_URL)
         self.session = sessionmaker(bind=self.engine)
+        if not symbol in self.engine.table_names():
+            self.create_symbol_table(f"table_{symbol}")
 
     def create_transaction(self, transaction_data):
-        symbol = transaction_data['symbol']
-        symbol_table_name = f"table_{symbol}"
-
-        # Sprawdzamy, czy tabela dla danego symbolu już istnieje
-        if not symbol in self._engine.table_names():
-            self.create_symbol_table(symbol_table_name)
         try:
             transaction = Transaction(**transaction_data)
             self.session.add(transaction)
