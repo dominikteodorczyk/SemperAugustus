@@ -135,3 +135,4 @@ docs/*.pdf
 *.ipynb
 .vscode
 .black
+data/*
