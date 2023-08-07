@@ -21,21 +21,25 @@ class TrasactionRepository:
         self.symbol = symbol
         self.engine = create_engine(f"sqlite:///{DataBases().transactions}")
         self.session = sessionmaker(bind=self.engine)
+        self.check_n_create()
 
-        if not inspect(self.engine).has_table(self.symbol):
-            metadata = MetaData()
-            Table(
-                self.symbol,
-                metadata,
-                Column("position", Integer, primary_key=True, nullable=False),
-                Column("symbol", String),
-                Column("order", Integer),
-                Column("cmd", Integer),
-                Column("volume", Float),
-                Column("profit", Float),
-                Column("open_price", Float),
-                Column("open_time", Integer),
-                Column("close_price", Float),
-                Column("close_time", Integer),
-            )
-            metadata.create_all(self.engine)
+    def create_symbol_table(self):
+        metadata = MetaData()
+        Table(
+            self.symbol,
+            metadata,
+            Column("position", Integer, primary_key=True, nullable=False),
+            Column("symbol", String),
+            Column("order", Integer),
+            Column("cmd", Integer),
+            Column("volume", Float),
+            Column("profit", Float),
+            Column("open_price", Float),
+            Column("open_time", Integer),
+            Column("close_price", Float),
+            Column("close_time", Integer),
+        )
+        metadata.create_all(self.engine)
+
+    def check_n_create(self):
+        if not inspect(self.engine).has_table(self.symbol): self.create_symbol_table()
