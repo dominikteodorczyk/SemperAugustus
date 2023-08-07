@@ -1,5 +1,5 @@
 """
-Menager danych umożliwiający zasilanie oraz pobieranie danych historycznych
+Database management tools
 """
 
 from sqlalchemy import (
@@ -11,14 +11,16 @@ from sqlalchemy import (
     MetaData,
     Table,
     inspect,
-    insert,
 )
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from settings import DataBases
 
 
-def create_specific_transaction_save_model(table_name):
-    class TrasactionRecord(declarative_base()):
+def create_specific_transaction_save_model(table_name: str):
+    class Base(DeclarativeBase):
+        pass
+
+    class TrasactionRecord(Base):
         __tablename__ = table_name
         position = Column(
             "position", Integer, primary_key=True, nullable=False
@@ -39,10 +41,12 @@ def create_specific_transaction_save_model(table_name):
 class TrasactionSave:
     def __init__(self, symbol):
         self.symbol = symbol
-        self.engine = create_engine(f"sqlite:///{DataBases().transactions}")
+        self.engine = create_engine(
+            f"sqlite:///{DataBases().transactions}", echo=True
+        )
         self.session = sessionmaker(bind=self.engine)()
         self.metadata = MetaData()
-        self.model = create_specific_transaction_save_model(self.symbol)
+
         self.check_n_create()
 
     def create_symbol_table(self):
@@ -67,7 +71,8 @@ class TrasactionSave:
             self.create_symbol_table()
 
     def add(self, trade):
-        transaction = self.model(
+        model = create_specific_transaction_save_model(self.symbol)
+        transaction = model(
             position=trade["position"],
             symbol=trade["symbol"],
             order=trade["order"],
