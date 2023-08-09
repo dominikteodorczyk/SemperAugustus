@@ -16,6 +16,7 @@ class Test_create_specific_transaction_save_model:
     designed to modify the TrasactionRecord object's __tablename__ attribute
     according to the symbol of the data to be saved
     """
+
     @pytest.fixture
     def mock_sqlalchemy(self):
         base = Mock()
@@ -47,7 +48,7 @@ class Test_create_specific_transaction_save_model:
             "open_price",
             "open_time",
             "close_price",
-            "close_time"
+            "close_time",
         ],
     )
     def test_created_table_is_correct(self, symbol, atribut):
@@ -58,3 +59,17 @@ class Test_create_specific_transaction_save_model:
         """
         model = create_specific_transaction_save_model(symbol)
         assert hasattr(model, atribut)
+
+class Test_TrasactionSave:
+
+    def mock_sqlalchemy(self):
+        base = Mock()
+        base.metadata = Mock()
+        session = Mock()
+        create_engine = Mock(return_value=session)
+
+        with pytest.MonkeyPatch().context() as m:
+            m.setattr('your_module.DeclarativeBase', base)
+            m.setattr('your_module.create_engine', create_engine)
+            m.setattr('your_module.sessionmaker', Mock(return_value=session))
+            yield base, session
