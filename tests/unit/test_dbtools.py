@@ -69,7 +69,7 @@ class Test_TrasactionSave:
         create_engine = Mock(return_value=session)
 
         with pytest.MonkeyPatch().context() as m:
-            m.setattr('your_module.DeclarativeBase', base)
-            m.setattr('your_module.create_engine', create_engine)
-            m.setattr('your_module.sessionmaker', Mock(return_value=session))
+            m.setattr('src.util.dbtools.DeclarativeBase', base)
+            m.setattr('src.util.dbtools.create_engine', create_engine)
+            m.setattr('src.util.dbtools.sessionmaker', Mock(return_value=session))
             yield base, session
