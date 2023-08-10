@@ -14,6 +14,7 @@ from models.trends import MovingAVG
 from utils.technical import setup_logger
 from utils.wallet import Wallet
 from utils.controlling import AssetTechnicalController
+from utils.dbtools import TransactionSave
 
 
 class TradingSession:
@@ -280,6 +281,7 @@ class Position:
         self.logging = setup_logger(
             f"{self.symbol}-{self.cmd}-", "position_logger.log"
         )
+        self.transaction_db = TransactionSave(symbol=self.symbol)
 
     def run(self):
         """
@@ -298,10 +300,11 @@ class Position:
         # Combination of sl_start parameter
         # (percentage value of position rate)
         self.close_signal.set_params(
-            client=self.client, position_data=self.order, sl_start=1.5
+            client=self.client, position_data=self.order, sl_start=0.5
         )
         self.close_signal.run()
         profit = self.close_signal.closedata["profit"]
+        self.transaction_db.add(self.close_signal.closedata)
         self.logging.info(
             f'{self.order.get("order_no", 0)} CLOSED WITH PROFIT: {profit}'
         )
