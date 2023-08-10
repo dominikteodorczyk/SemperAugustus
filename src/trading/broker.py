@@ -14,7 +14,7 @@ from models.trends import MovingAVG
 from utils.technical import setup_logger
 from utils.wallet import Wallet
 from utils.controlling import AssetTechnicalController
-from utils.dbtools import TrasactionSave
+from utils.dbtools import TransactionSave
 
 
 class TradingSession:
@@ -281,7 +281,7 @@ class Position:
         self.logging = setup_logger(
             f"{self.symbol}-{self.cmd}-", "position_logger.log"
         )
-        self.transaction_db = TrasactionSave(symbol=self.symbol)
+        self.transaction_db = TransactionSave(symbol=self.symbol)
 
     def run(self):
         """
