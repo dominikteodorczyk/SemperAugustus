@@ -7,7 +7,7 @@ from settings import DataBases
 from unittest.mock import Mock, patch
 from utils.dbtools import (
     create_specific_transaction_save_model,
-    TrasactionSave,
+    TransactionSave,
 )
 
 
@@ -60,21 +60,3 @@ class Test_create_specific_transaction_save_model:
         """
         model = create_specific_transaction_save_model(symbol)
         assert hasattr(model, atribut)
-
-class Test_TrasactionSave:
-
-    @pytest.fixture
-    def mock_create_specific_transaction_save_model(self):
-        return Mock(return_value=Mock())
-
-    @pytest.fixture
-    def mock_sqlalchemy(self):
-        mock_create_engine = Mock()
-        mock_sessionmaker = Mock()
-        mock_metadata = Mock()
-        mock_inspect = Mock()
-        with patch('src.utils.dbtools.create_engine', mock_create_engine), \
-            patch('src.utils.dbtools.sessionmaker', mock_sessionmaker), \
-            patch('src.utils.dbtools.MetaData', mock_metadata), \
-            patch('src.utils.dbtools.inspect', mock_inspect):
-            yield mock_create_engine, mock_sessionmaker, mock_metadata, mock_inspect
