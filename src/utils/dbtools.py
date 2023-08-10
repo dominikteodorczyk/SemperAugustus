@@ -32,7 +32,7 @@ def create_specific_transaction_save_model(table_name: str):
         https://docs.sqlalchemy.org/en/20/orm/
         """
 
-    class TrasactionRecord(Base):
+    class Transaction(Base):
         """
         Transaction data model  together with the defined table name.
         """
@@ -51,10 +51,10 @@ def create_specific_transaction_save_model(table_name: str):
         close_price = Column("close_price", Float)
         close_time = Column("close_time", Integer)
 
-    return TrasactionRecord
+    return Transaction
 
 
-class TrasactionSave:
+class TransactionSave:
     """
     A class representing a transaction saver.
 
