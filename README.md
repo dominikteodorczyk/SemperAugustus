@@ -41,6 +41,11 @@ This command will download and install all the required modules and libraries th
 <b>5. Modify the '.exampleevn' file according to the instructions therein and rename it to '.evn'.</b><br>
 6. The project has been successfully installed!
 
+## Trading session diagram
+The trading session includes the main TradingSession object simultaneously performing 3 activities thanks to multithreading. This approach will fully realize its strengths when the Risk Management tool and Trade Session Tech Control are completed. The fully functioning process currently is the Trading Pool which is an object fully focused on performing trading on defined assets.<br>
+![image](docs/graphics/trading_session_schema.png) <br>
+<p align="justify">
+Trading Pool multithreadedly runs separately for each asset the monitoring of its data coming from the stream (1) , passes this data to the model that makes buying and selling decisions (2). It executes an order to open a position (3) further transmitting key transaction data to the selling model (4). When the selling model orders to close the position (5) it performs the operation. The final step is the transmission of information about the results of the transaction to the database. This information will be used by unfinished models and modules.
 
 
 
