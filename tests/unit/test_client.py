@@ -74,9 +74,7 @@ class Test_XTBClient:
             failed is True
         )  # means that the login attempt should fail after disconnection
 
-    @pytest.mark.xfail(
-        reason="API sometimes failed to login by GH"
-    )
+    @pytest.mark.xfail(reason="API sometimes failed to login by GH")
     def test_XTBClient_method_logs(self):
         # test of the logging method along with checking the change
         # of parameters of the client class object
