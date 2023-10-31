@@ -41,7 +41,7 @@ class TradingSession:
 
     def __init__(self, symbols: list[str]) -> None:
         self.symbols = symbols
-        self.wallet = Wallet()
+        self.wallet = Wallet(symbols=self.symbols)
         self.session_control = AssetTechnicalController(
             symbol="symbols"
         )  # FIXME: to change in the future
