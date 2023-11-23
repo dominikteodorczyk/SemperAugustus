@@ -1,19 +1,19 @@
-# File used to configure the variables of the entire application 
-# and to store sensitive data. The original .env file is excluded 
-# from commitable files via .gitignore. The .exampleevn file 
-# contains a template, which needs to be renamed to .env to be 
+# File used to configure the variables of the entire application
+# and to store sensitive data. The original .env file is excluded
+# from commitable files via .gitignore. The .exampleevn file
+# contains a template, which needs to be renamed to .env to be
 # loaded by settings.py and then visible to the application components.
 
-# Remember that the values YOUR_XTB_DEMO_LOGIN, YOUR_XTB_DEMO_PASSWORD, 
+# Remember that the values YOUR_XTB_DEMO_LOGIN, YOUR_XTB_DEMO_PASSWORD,
 # etc. should be replaced with your real credentials.
 
-# It is recommended to check each time the compatibility of ports and 
+# It is recommended to check each time the compatibility of ports and
 # sockets according to the values specified in the documentation:
 # http://developers.xstore.pro/documentation/
 
 
-# Important! The primary broker with whose api the application works 
-# is XTB and login credentials are required. The following brokers 
+# Important! The primary broker with whose api the application works
+# is XTB and login credentials are required. The following brokers
 # listed in the optional section are not required for basic trading.
 
 
@@ -21,7 +21,7 @@
 XTB_LOGIN_DEMO = "YOUR_XTB_DEMO_LOGIN"  # Login for XTB DEMO account
 XTB_PASSWORD_DEMO = "YOUR_XTB_DEMO_PASSWORD"  # Password for XTB DEMO account
 XTB_HOST_DEMO = "xapi.xtb.com"  # Host for XTB DEMO account
-XTB_MAIN_PORT_DEMO = 5124  # Main port for XTB DEMO account 
+XTB_MAIN_PORT_DEMO = 5124  # Main port for XTB DEMO account
 XTB_STREAMING_PORT_DEMO = 5125  # Streaming port for XTB DEMO account
 XTB_WEBSOCKET_DEMO = "wss://ws.xtb.com/demo"  # WebSocket URL for XTB DEMO account
 XTB_WEBSOCKET_STREAMING_PORT_DEMO = "wss://ws.xtb.com/demo"  # WebSocket streaming port for XTB DEMO account
@@ -34,16 +34,6 @@ XTB_MAIN_PORT_REAL = 5112  # Main port for XTB REAL account
 XTB_STREAMING_PORT_REAL = 5113  # Streaming port for XTB REAL account
 XTB_WEBSOCKET_REAL = "wss://ws.xtb.com/real"  # WebSocket URL for XTB REAL account
 XTB_WEBSOCKET_STREAMING_PORT_REAL = "wss://ws.xtb.com/realStream"  # WebSocket streaming port for XTB REAL account
-
-
-#OPTIONAL BROKERS
-
-# BOSSAFX demo credentials
-BOSSA_NAZWA_DEMO = "YOUR_BOSSA_NAZWA_DEMO"  # BOSSA DEMO demo account name
-BOSSA_LOGIN_DEMO = "YOUR_BOSSA_LOGIN_DEMO"  # BOSSA DEMO demo account login
-BOSSA_PASSWORD_DEMO = "YOUR_BOSSA_PASSWORD_DEMO"  # BOSSA DEMO demo account password
-BOSSA_INWESTOR_DEMO = "YOUR_BOSSA_INWESTOR_DEMO"  # BOSSA DEMO demo account investor ID
-BOSSA_SERWER_DEMO = "BossaFX-Demo"  # BOSSA DEMO account server
 
 ################################
 
