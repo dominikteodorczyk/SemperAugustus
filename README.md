@@ -2,18 +2,18 @@
 
 *<p align="justify"><b>Semper Augustus</b> is a symbol of tulipomania - an economic phenomenon in 17th-century Holland. The extremely rare cabboules of this flower affected by tulip mottle virus disease met with a <b>huge increase in demand and prices</b> on the local market. It is believed to have been the first <b>speculative bubble</b>. Flowers then became a symbol of luxury and as well as social standing. In 1637, the speculative bubble burst, leading to many tragedies for people involved in speculation. <b>The collapse of the market was caused by excessive prices, for which there were no more takers</b>. The story is a valuable lesson for speculators and traders around the world...</p>*
 <p align="center">. . .</p>
-<p align="justify">This appilation was written to eliminate the human emotion factor from the trading process. It is a trading bot that allows algorithmic trading with the use of brokers' api. This solution can work with the models developed within this repository to take long and short positions depending on the market behavior. The use of multi-threading makes it possible to trade on multiple assets at the same time with minimal computational load. <b>It is planned to extend the functionality with arbitration.</b></p>
+<p align="justify">This appilation was written to eliminate the human emotion factor from the trading process. It is a trading bot that allows algorithmic trading with the use of brokers' api. This solution can work with the models developed within this repository to take long and short positions depending on the market behavior. The use of multi-threading makes it possible to trade on multiple assets at the same time with minimal computational load.</b></p>
 
 ## Project status
 <p align="justify">
 The project currently provides a basis for developing real-time investment strategies. By default, the code has been adapted to use a demo account due to the risk of losses. The current state of the application makes it possible to use the framework to implement complex solutions. It includes:
-<li>XTB broker api client</li> 
+<li>XTB broker api client</li>
 <li>Exchange data streaming module </li>
-<li>Purchase decision model - moving averages</li> 
-<li>Position closing model</li> 
+<li>Purchase decision model - moving averages</li>
+<li>Position closing model</li>
 <li>Module for conducting multiple trading sessions simultaneously using multithreading </li> <br>
 The next steps will be to:
-<li>Development of portfolio risk management modules</li> 
+<li>Development of portfolio risk management modules</li>
 <li>Machine learning-based method of catching inefficiencies in a trading platform to avoid losses caused by its malfunctioning</li>
 <li>Development of other investment methods</li>
 
